@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CleanQuote — Cleaning Service Quote Calculator &amp; Quote Book</title>
+<style>
+:root{--bg:#f2f7f5;--panel:#ffffff;--panel2:#e8f2ee;--ink:#17302a;--muted:#5d7269;--acc:#0e7a5f;--acc2:#1d9e77;--warn:#b97a0c;--bad:#c23333;--line:#cfded8;--radius:12px}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45}
+header{background:linear-gradient(135deg,#0b5c47,#0e7a5f);color:#fff;padding:16px}
+header h1{margin:0;font-size:22px}
+header .sub{color:#cfe8df;font-size:13px;margin-top:2px}
+header .co{font-size:13px;color:#a7f3d0;margin-top:4px;font-weight:600}
+nav{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;background:var(--panel);position:sticky;top:0;z-index:5;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:14px;cursor:pointer;min-height:40px;white-space:nowrap}
+nav button.active{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+main{max-width:980px;margin:0 auto;padding:14px 12px 60px}
+section.view{display:none}
+section.view.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:17px}
+.card h3{margin:14px 0 8px;font-size:15px;color:var(--acc)}
+label{display:block;font-size:12.5px;color:var(--muted);margin:8px 0 3px}
+input,select,textarea{width:100%;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px;font-size:15px;min-height:42px}
+textarea{min-height:64px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc2);outline-offset:0}
+input[type=checkbox]{width:auto;min-height:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:640px){.grid,.grid3{grid-template-columns:1fr}}
+.btn{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:11px 16px;font-size:15px;font-weight:700;cursor:pointer;min-height:44px}
+.btn.secondary{background:var(--panel2);color:var(--ink);border:1px solid var(--line);font-weight:600}
+.btn.green{background:var(--acc2);color:#04382a}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad);font-weight:600}
+.btn.small{padding:7px 10px;font-size:13px;min-height:36px;min-height:40px;}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.tblwrap{overflow-x:auto}
+.stickybar{position:sticky;top:64px;z-index:4;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.demo-warn{border:2px solid var(--bad);background:#fdf0f0;color:#7a1a1a;border-radius:8px;padding:10px 12px;font-weight:700;margin-bottom:12px}
+@media(max-width:640px){
+ #bookTable,#bookTable tbody,#bookTable tr,#bookTable td{display:block;width:100%}
+ #bookTable thead{display:none}
+ #bookTable tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:8px 6px;background:#fff}
+ #bookTable td{border-bottom:none;padding:5px 6px;text-align:left!important}
+ #bookTable td::before{content:attr(data-label);display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;margin-bottom:2px}
+ #bookTable td .btn{margin:2px 4px 2px 0}
+ .stickybar{top:56px}
+}
+.big{font-size:24px;font-weight:800}
+.good{color:var(--acc)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.floorbox{border:2px solid var(--bad);background:#fdf0f0;border-radius:var(--radius);padding:12px;margin-top:12px}
+.floorbox.ok{border-color:var(--acc2);background:#e9f7f1}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi .k{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px}
+.kpi .k .v{font-size:20px;font-weight:800}
+.kpi .k .l{font-size:12px;color:var(--muted)}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
+.pill.draft{background:#e2e8f0;color:#334155}.pill.sent{background:#dbeafe;color:#1e40af}.pill.accepted{background:#dcfce7;color:#166534}.pill.booked{background:#14532d;color:#bbf7d0}.pill.declined{background:#fee2e2;color:#991b1b}
+.muted{color:var(--muted);font-size:13px}
+.modebar{display:flex;gap:8px;margin-bottom:14px}
+.modebar button{flex:1;background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;color:var(--ink);min-height:48px}
+.modebar button.active{border-color:var(--acc);background:#e9f7f1;color:var(--acc)}
+.addon-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.addon-row input[type=number]{width:76px}
+.addon-row .an{font-size:14px}
+.addon-row .ap{color:var(--muted);font-size:13px;white-space:nowrap}
+details{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px}
+summary{cursor:pointer;font-weight:700;font-size:15px}
+.help p,.help li{font-size:14px;color:#33524a}
+.help ul{padding-left:18px}
+#printArea{display:none}
+@media print{
+ body{background:#fff;color:#000}
+ header,nav,main,.no-print{display:none!important}
+ #printArea{display:block!important;color:#000;font-family:Georgia,serif;padding:10px}
+ #printArea h1{font-size:22px;margin:0}
+ #printArea table{font-size:13px}
+ #printArea th,#printArea td{border-bottom:1px solid #999;color:#000}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧹 CleanQuote</h1>
+  <div class="sub">Cleaning-service quote calculator &amp; quote book — residential and commercial, priced from your real costs with a profit floor.</div>
+  <div class="co" id="coHeader"></div>
+</header>
+<nav id="tabs">
+  <button data-view="quote" class="active">Quote Builder</button>
+  <button data-view="book">Quote Book</button>
+  <button data-view="settings">Settings &amp; Rates</button>
+  <button data-view="help">Help</button>
+</nav>
+<main>
+
+<!-- ============ QUOTE BUILDER ============ -->
+<section class="view active" id="view-quote">
+  <div class="modebar">
+    <button id="modeRes" class="active" type="button">🏠 Residential</button>
+    <button id="modeCom" type="button">🏢 Commercial</button>
+  </div>
+  <div class="stickybar" id="builderStickyBar"><button class="btn green" id="saveQuoteBtnSticky" type="button">Save quote</button><button class="btn" id="printBtnSticky" type="button">Print / save customer quote</button><span class="muted" id="stickyTotal"></span></div>
+
+  <div class="card">
+    <h2>Client &amp; Job</h2>
+    <div class="grid">
+      <div><label>Client name</label><input id="qClient" type="text" placeholder="e.g. The Hendersons"></div>
+      <div><label>Quote date</label><input id="qDate" type="date"></div>
+    </div>
+    <div><label>Address / location</label><input id="qAddress" type="text" placeholder="Street, town"></div>
+    <div class="grid3">
+      <div><label>Crew size (cleaners on site)</label><input inputmode="decimal" id="qCrew" type="number" min="1" step="1" value="2"></div>
+      <div><label>Frequency</label><select id="qFreq"></select></div>
+      <div><label>Travel — round-trip miles</label><input inputmode="decimal" id="qMiles" type="number" min="0" step="0.1" value="10"></div>
+    </div>
+    <p class="muted" id="freqNote"></p>
+  </div>
+
+  <!-- Residential panel -->
+  <div id="panelRes">
+    <div class="card">
+      <h2>Home Details</h2>
+      <div class="grid3">
+        <div><label>Home size (sq ft)</label><input inputmode="decimal" id="rSqft" type="number" min="0" step="10" value="2000"></div>
+        <div><label>Bedrooms</label><input inputmode="decimal" id="rBeds" type="number" min="0" step="1" value="4"></div>
+        <div><label>Bathrooms</label><input inputmode="decimal" id="rBaths" type="number" min="0" step="0.5" value="3"></div>
+      </div>
+      <div class="grid3">
+        <div><label>Service type</label><select id="rSvc"></select></div>
+        <div><label>Condition</label><select id="rCond"></select></div>
+        <div><label>Pricing model</label>
+          <select id="rModel"><option value="hourly">Per-hour (time × rate)</option><option value="flat">Flat (sq-ft tier table)</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Add-ons</h2>
+      <div id="addonRows"></div>
+      <p class="muted">Set a quantity for anything the client wants added. Prices come from Settings and apply per unit (per fridge, per load of laundry, per pet…). Add-ons are never discounted.</p>
+    </div>
+  </div>
+
+  <!-- Commercial panel -->
+  <div id="panelCom" style="display:none">
+    <div class="card">
+      <h2>Facility Details</h2>
+      <div class="grid3">
+        <div><label>Space size (sq ft)</label><input inputmode="decimal" id="cSqft" type="number" min="0" step="10" value="3200"></div>
+        <div><label>Area type</label><select id="cArea"></select></div>
+        <div><label>When is it cleaned?</label><select id="cPeriod"></select></div>
+      </div>
+      <p class="muted">Production rates (sq ft one cleaner covers per hour) and the night/weekend factors are editable in Settings. Frequency discounts apply automatically.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Cost Engine &amp; Price</h2>
+    <div id="costBreakdown"></div>
+    <div class="kpi" style="margin-top:12px">
+      <div class="k"><div class="l">Break-even (per visit)</div><div class="v" id="kBreak">$0.00</div></div>
+      <div class="k"><div class="l">Recommended (per visit)</div><div class="v good" id="kRec">$0.00</div></div>
+      <div class="k"><div class="l">Engine price (per visit)</div><div class="v" id="kEng">$0.00</div></div>
+    </div>
+    <div id="recurBox" style="margin-top:12px"></div>
+    <div class="grid" style="margin-top:10px">
+      <div><label>Final price to quote — per visit ($)</label><input inputmode="decimal" id="qFinal" type="number" min="0" step="0.01"></div>
+      <div><label>Your margin at final price</label><input id="qMarginShow" type="text" readonly></div>
+    </div>
+    <div id="floorBox"></div>
+    <div><label>Terms printed on the quote sheet (editable)</label><textarea id="qTerms"></textarea></div>
+    <div><label>Internal notes (not printed)</label><input id="qNotes" type="text" placeholder="Gate code, dogs, where they heard about you…"></div>
+    <div class="btnrow">
+      <button class="btn green" id="saveQuoteBtn">Save quote</button>
+      <button class="btn" id="printBtn">Print / save customer quote sheet</button>
+      <button class="btn secondary" id="resetQuoteBtn">Start fresh</button>
+    </div>
+    <p class="muted" id="saveMsg"></p>
+  </div>
+</section>
+
+<!-- ============ QUOTE BOOK ============ -->
+<section class="view" id="view-book">
+  <div class="card">
+    <h2>Quote Book</h2>
+    <div class="kpi" id="bookKpis"></div>
+  </div>
+  <div class="card">
+    <h2>⏰ Follow-up — sent, still waiting</h2>
+    <div id="followList"></div>
+    <p class="muted" id="followEmpty"></p>
+  </div>
+  <div class="card">
+    <h2>All Quotes</h2>
+    <div class="tblwrap"><table id="bookTable">
+      <thead><tr><th>Date</th><th>Client</th><th>Job</th><th class="num">Per visit</th><th class="num">Monthly</th><th class="num">Margin</th><th>Status</th><th></th></tr></thead>
+      <tbody id="bookBody"></tbody>
+    </table></div>
+    <p class="muted" id="bookEmpty"></p>
+  </div>
+  <div class="card">
+    <h2>Backup</h2>
+    <p class="muted">Export all settings + quotes as one JSON file, or restore from a backup. Data also stays in this browser automatically.</p>
+    <div class="btnrow">
+      <button class="btn secondary" id="exportBtn">Export backup (JSON)</button>
+      <label class="btn secondary" style="display:inline-flex;align-items:center;cursor:pointer">Import backup file<input id="importFile" type="file" accept=".json,application/json" style="display:none"></label>
+      <button class="btn danger" id="clearDemoBtn">Clear demo data</button>
+      <button class="btn danger" id="wipeBtn">Erase ALL data</button>
+    </div>
+    <label for="importText">…or paste backup JSON here</label>
+    <textarea id="importText" placeholder="Paste the contents of a CleanQuote backup file"></textarea>
+    <div class="btnrow"><button class="btn secondary" id="importTextBtn">Import pasted backup</button></div>
+    <p class="muted" id="backupMsg"></p>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section class="view" id="view-settings">
+  <div class="stickybar" id="settingsStickyBar"><button class="btn" id="saveSettingsBtnTop" type="button">Save settings</button><span class="muted" id="settingsMsgTop"></span></div>
+  <div class="card">
+    <h2>Business Info (prints on quote sheets)</h2>
+    <div class="grid">
+      <div><label>Business name</label><input id="sCompany" type="text" placeholder="Your business name"></div>
+      <div><label>Phone</label><input id="sPhone" type="text" placeholder="Your phone"></div>
+    </div>
+    <div class="grid">
+      <div><label>Email</label><input id="sEmail" type="text" placeholder="Your email"></div>
+      <div><label>Default quote terms</label><input id="sTerms" type="text"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Rates, Costs &amp; Profit Floor</h2>
+    <div class="grid3">
+      <div><label>Hourly rate you CHARGE ($ per cleaner-hour)</label><input inputmode="decimal" id="sHourly" type="number" min="0" step="1"></div>
+      <div><label>Crew pay ($ per cleaner-hour — your cost)</label><input inputmode="decimal" id="sCrewPay" type="number" min="0" step="0.5"></div>
+      <div><label>Supplies cost (% of labor cost)</label><input inputmode="decimal" id="sSupplies" type="number" min="0" step="1"></div>
+      <div><label>Vehicle cost ($ per mile)</label><input inputmode="decimal" id="sMile" type="number" min="0" step="0.05"></div>
+      <div><label>Overhead (% added to cost)</label><input inputmode="decimal" id="sOverhead" type="number" min="0" step="1"></div>
+      <div><label>PROFIT FLOOR — minimum margin (%)</label><input inputmode="decimal" id="sFloor" type="number" min="0" max="90" step="1"></div>
+      <div><label>Target margin for Recommended (%)</label><input inputmode="decimal" id="sTarget" type="number" min="0" max="90" step="1"></div>
+      <div><label>Minimum job charge ($ per visit)</label><input inputmode="decimal" id="sMinJob" type="number" min="0" step="1"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Residential Time Model</h2>
+    <p class="muted">Estimated cleaner-hours = (sq ft ÷ rate + bedrooms × mins + bathrooms × mins) × service factor × condition factor.</p>
+    <div class="grid3">
+      <div><label>Base production (sq ft per cleaner-hour)</label><input inputmode="decimal" id="sSqftHr" type="number" min="1" step="10"></div>
+      <div><label>Minutes per bedroom</label><input inputmode="decimal" id="sMinsBed" type="number" min="0" step="1"></div>
+      <div><label>Minutes per bathroom</label><input inputmode="decimal" id="sMinsBath" type="number" min="0" step="1"></div>
+    </div>
+    <h3>Service-type factors (time &amp; price)</h3>
+    <div class="tblwrap"><table><thead><tr><th>Service type</th><th class="num">Factor</th></tr></thead><tbody id="svcFactorBody"></tbody></table></div>
+    <h3>Condition factors</h3>
+    <div class="tblwrap"><table><thead><tr><th>Condition</th><th class="num">Factor</th></tr></thead><tbody id="condFactorBody"></tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>Flat-Rate Tier Table (residential, standard clean / light condition)</h2>
+    <p class="muted">Homes up to each size get the flat price; service-type and condition factors still apply on top. Above the largest tier, the per-sq-ft rate below is added for the extra area.</p>
+    <div class="tblwrap"><table><thead><tr><th class="num">Up to (sq ft)</th><th class="num">Flat price ($)</th><th></th></tr></thead><tbody id="tierBody"></tbody></table></div>
+    <div class="grid">
+      <div><label>Rate beyond top tier ($ per extra sq ft)</label><input inputmode="decimal" id="sOverRate" type="number" min="0" step="0.01"></div>
+      <div style="display:flex;align-items:flex-end"><button class="btn secondary" id="addTierBtn" type="button">+ Add tier row</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Add-on Prices</h2>
+    <div class="tblwrap"><table><thead><tr><th>Add-on</th><th class="num">Price ($)</th><th></th></tr></thead><tbody id="addonSetBody"></tbody></table></div>
+    <div class="grid">
+      <div><label>New add-on name</label><input id="newAddonName" type="text" placeholder="e.g. Garage sweep-out"></div>
+      <div><label>Price ($)</label><input inputmode="decimal" id="newAddonPrice" type="number" min="0" step="1" placeholder="30"></div>
+    </div>
+    <div class="btnrow"><button class="btn secondary" id="addAddonBtn" type="button">+ Add add-on</button></div>
+  </div>
+  <div class="card">
+    <h2>Commercial Production Rates &amp; Factors</h2>
+    <div class="tblwrap"><table><thead><tr><th>Area type</th><th class="num">Sq ft per cleaner-hour</th></tr></thead><tbody id="prodBody"></tbody></table></div>
+    <h3>When-cleaned factors (price)</h3>
+    <div class="tblwrap"><table><thead><tr><th>Timing</th><th class="num">Factor</th></tr></thead><tbody id="periodBody"></tbody></table></div>
+    <h3>Frequency discounts (%) — apply to the service price, never to add-ons</h3>
+    <div class="tblwrap"><table><thead><tr><th>Frequency</th><th class="num">Discount %</th><th class="num">Visits / year</th></tr></thead><tbody id="freqBody"></tbody></table></div>
+    <div class="btnrow"><button class="btn" id="saveSettingsBtn">Save settings</button></div>
+    <p class="muted" id="settingsMsg"></p>
+  </div>
+</section>
+
+<!-- ============ HELP ============ -->
+<section class="view help" id="view-help">
+  <details open><summary>How residential pricing works</summary>
+    <p>First the app estimates the work in <strong>cleaner-hours</strong> (one cleaner, start to finish):</p>
+    <ul>
+      <li><strong>Base time</strong> = home sq ft ÷ your base production rate (default 450 sq ft/hr) + bedrooms × 10 min + bathrooms × 20 min.</li>
+      <li><strong>Service factor</strong> — standard ×1.0, first-time ×1.4, deep ×1.6, move-in/out ×1.8. A deep clean simply takes longer, and the price follows the time.</li>
+      <li><strong>Condition factor</strong> — light ×1.0, moderate ×1.2, heavy ×1.45.</li>
+    </ul>
+    <p>Then it prices two ways — you pick per quote:</p>
+    <ul>
+      <li><strong>Per-hour:</strong> cleaner-hours × your hourly rate, plus add-ons.</li>
+      <li><strong>Flat:</strong> your sq-ft tier price × service factor × condition factor, plus add-ons. The hours estimate still shows, so you can see whether the flat price actually pays for the time.</li>
+    </ul>
+    <p>Crew size changes how long you'll be <em>on site</em> (cleaner-hours ÷ crew), never the price or the cost — two cleaners for half the time cost the same as one cleaner all day.</p>
+  </details>
+  <details><summary>How commercial pricing works</summary>
+    <p>Cleaner-hours = sq ft ÷ the production rate for the area type (office 2,500, retail 3,000, medical 1,800, restaurant 1,500 sq ft/hr by default — medical and food spaces are slower because of detail and sanitizing). Price = cleaner-hours × hourly rate × timing factor (nights ×1.15, weekends ×1.10, night + weekend ×1.25), then the frequency discount comes off.</p>
+  </details>
+  <details><summary>Recurring value — the number that matters</summary>
+    <p>Frequency discounts are the price of loyalty: weekly −15%, biweekly −10%, monthly −5% by default (editable). In exchange, the quote shows what the client is <strong>worth</strong>: weekly = 52 visits a year, biweekly = 26, monthly = 12. A $95 weekly visit is a $4,940-a-year client. That framing — per-visit price vs. annual value — is how you decide which clients deserve the discount and which ones to protect with your floor.</p>
+  </details>
+  <details><summary>The profit floor</summary>
+    <p>Every quote is costed honestly: labor (cleaner-hours × crew pay) + supplies (% of labor) + travel (round-trip miles × vehicle cost), marked up by your overhead % to get <strong>break-even</strong>. Your floor is the lowest price that still leaves your minimum margin (default 30%) — and never less than your minimum job charge. If you type a final price below the floor, CleanQuote flags it red and <strong>will not save the quote</strong> unless you tick the one-time override box and own the decision. Loading a saved quote to edit it, saving, or raising the price back above the floor resets the override — you can never override by accident or by habit.</p>
+  </details>
+  <details><summary>Localize the defaults — important</summary>
+    <p>Every rate in this app is a national planning default: $55/hr charged, $22/hr crew pay, 450 sq ft/hr base production, the tier table, the add-on prices. They are starting points, not your market. Before quoting real work: time your next three cleans and compare them with the estimate, check what local competitors charge, and set your numbers in Settings. A calculator with wrong inputs gives confidently wrong prices — this one makes yours easy to fix.</p>
+  </details>
+  <details><summary>Quote statuses &amp; follow-up</summary>
+    <p>New quotes start as <strong>Draft</strong>. Mark them <strong>Sent</strong> when they go out — the Follow-up list then tracks every sent-but-unanswered quote oldest-first, so nothing quietly dies. <strong>Accepted</strong> = the client said yes; <strong>Booked</strong> = it's on the schedule; <strong>Declined</strong> = they passed. Booked value in the Quote Book counts booked quotes at their per-visit price plus their recurring value where it applies.</p>
+  </details>
+  <details><summary>Your data</summary>
+    <p>Everything is stored only in this browser (localStorage) on this device — no account, no cloud, no tracking, works fully offline. Use Export backup in the Quote Book before switching browsers or devices. Clearing browser data erases the app — export first.</p>
+  </details>
+  <details><summary>Demo data</summary>
+    <p>Four sample quotes are pre-loaded: a booked deep clean, a biweekly flat-rate clean that's still waiting on a reply, an accepted weekly medical-office contract, and a declined move-out clean. "Clear demo data" in the Quote Book removes them in one click and keeps anything you added.</p>
+  </details>
+</section>
+</main>
+
+<div id="printArea"></div>
+
+<script>
+"use strict";
+/* ================= CleanQuote — engine ================= */
+var STORE_KEY = "cleanquote_v1";
+
+var SERVICE_TYPES = [
+  {id:"standard", name:"Standard clean"},
+  {id:"first",    name:"First-time clean"},
+  {id:"deep",     name:"Deep clean"},
+  {id:"move",     name:"Move-in / move-out"}
+];
+var CONDITIONS = [
+  {id:"light",    name:"Light — maintained"},
+  {id:"moderate", name:"Moderate — lived-in"},
+  {id:"heavy",    name:"Heavy — neglected / post-party"}
+];
+var AREA_TYPES = [
+  {id:"office",     name:"Office"},
+  {id:"retail",     name:"Retail / storefront"},
+  {id:"medical",    name:"Medical / dental"},
+  {id:"restaurant", name:"Restaurant / food"}
+];
+var PERIODS = [
+  {id:"standard",     name:"Business hours"},
+  {id:"night",        name:"Evenings / nights"},
+  {id:"weekend",      name:"Weekend"},
+  {id:"nightWeekend", name:"Night + weekend"}
+];
+var FREQUENCIES = [
+  {id:"onetime",  name:"One-time",       visitsYear:0},
+  {id:"weekly",   name:"Weekly",         visitsYear:52},
+  {id:"biweekly", name:"Every 2 weeks",  visitsYear:26},
+  {id:"monthly",  name:"Monthly",        visitsYear:12}
+];
+var STATUSES = ["draft","sent","accepted","declined","booked"];
+
+function defaultAddons(){
+  return [
+    {id:"fridge",     name:"Inside fridge",        price:35},
+    {id:"oven",       name:"Inside oven",          price:35},
+    {id:"windows",    name:"Interior windows",     price:45},
+    {id:"laundry",    name:"Laundry (per load)",   price:25},
+    {id:"baseboards", name:"Baseboards",           price:40},
+    {id:"pet",        name:"Pet fee (per pet)",    price:25}
+  ];
+}
+function defaultSettings(){
+  return {
+    company:"", phone:"", email:"",
+    terms:"Quote valid for 30 days. Payment is due on completion of each visit unless other terms are agreed in writing. Recurring service may be cancelled by either side with 7 days' notice. We bring all cleaning supplies and equipment. Please secure pets and valuables during service.",
+    hourlyRate:55, crewPay:22, suppliesPct:6, mileCost:0.70,
+    overheadPct:10, floorMargin:30, targetMargin:45, minJob:99,
+    sqftPerHour:450, minsBed:10, minsBath:20,
+    svcFactors:{ standard:1.0, first:1.4, deep:1.6, move:1.8 },
+    condFactors:{ light:1.0, moderate:1.2, heavy:1.45 },
+    tiers:[
+      {upTo:1000, price:179},{upTo:1500, price:219},{upTo:2000, price:259},
+      {upTo:2500, price:309},{upTo:3000, price:359},{upTo:4000, price:439}
+    ],
+    overSqftRate:0.12,
+    addons: defaultAddons(),
+    prodRates:{ office:2500, retail:3000, medical:1800, restaurant:1500 },
+    periodFactors:{ standard:1.0, night:1.15, weekend:1.10, nightWeekend:1.25 },
+    freqDiscounts:{ onetime:0, weekly:15, biweekly:10, monthly:5 }
+  };
+}
+
+/* ---------- safe helpers ---------- */
+function num(v, def){
+  var n = parseFloat(v);
+  if(!isFinite(n)) return def||0;
+  if(n < 0) return 0;
+  if(n > 999999999) return 999999999;
+  return n;
+}
+function pctC(v, def){ var n = num(v, def); return n > 90 ? 90 : n; }
+function factor(v, def){ var n = parseFloat(v); if(!isFinite(n) || n <= 0) return def; if(n > 20) return 20; return n; }
+function money(n){ if(!isFinite(n)) n = 0; return "$" + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function pad(n){ return (n<10?"0":"")+n; }
+function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function validDate(s){
+  if(typeof s!=="string") return false;
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s); if(!m) return false;
+  var y=+m[1], mo=+m[2], d=+m[3];
+  if(mo<1||mo>12||d<1||d>31) return false;
+  var dt = new Date(Date.UTC(y, mo-1, d));
+  return dt.getUTCFullYear()===y && dt.getUTCMonth()===mo-1 && dt.getUTCDate()===d;
+}
+function svcName(id){ for(var i=0;i<SERVICE_TYPES.length;i++) if(SERVICE_TYPES[i].id===id) return SERVICE_TYPES[i].name; return SERVICE_TYPES[0].name; }
+function condName(id){ for(var i=0;i<CONDITIONS.length;i++) if(CONDITIONS[i].id===id) return CONDITIONS[i].name; return CONDITIONS[0].name; }
+function areaName(id){ for(var i=0;i<AREA_TYPES.length;i++) if(AREA_TYPES[i].id===id) return AREA_TYPES[i].name; return AREA_TYPES[0].name; }
+function periodName(id){ for(var i=0;i<PERIODS.length;i++) if(PERIODS[i].id===id) return PERIODS[i].name; return PERIODS[0].name; }
+function freqById(id){ for(var i=0;i<FREQUENCIES.length;i++) if(FREQUENCIES[i].id===id) return FREQUENCIES[i]; return FREQUENCIES[0]; }
+function addonById(s, id){ for(var i=0;i<s.addons.length;i++) if(s.addons[i].id===id) return s.addons[i]; return null; }
+
+/* ---------- flat tier lookup ---------- */
+function tierPrice(sqft, s){
+  var tiers = (s.tiers||[]).slice().sort(function(a,b){ return a.upTo - b.upTo; });
+  if(!tiers.length) return sqft * num(s.overSqftRate, 0);
+  for(var i=0;i<tiers.length;i++){ if(sqft <= tiers[i].upTo) return tiers[i].price; }
+  var top = tiers[tiers.length-1];
+  return top.price + (sqft - top.upTo) * num(s.overSqftRate, 0);
+}
+
+/* ---------- pricing engine (pure, testable) ---------- */
+function computeQuote(q, s){
+  var freq = freqById(q.frequency);
+  var disc = pctC(s.freqDiscounts[q.frequency], 0) / 100;
+  var hours = 0, serviceGross = 0, addonsTotal = 0, addonLines = [];
+  var scope = "";
+  if(q.mode === "com"){
+    var prod = num(s.prodRates[q.areaType], 2500); if(prod <= 0) prod = 2500;
+    hours = num(q.sqft, 0) / prod;
+    serviceGross = hours * num(s.hourlyRate, 0) * factor(s.periodFactors[q.period], 1);
+    scope = areaName(q.areaType) + " cleaning — " + num(q.sqft,0).toLocaleString() + " sq ft, " + periodName(q.period).toLowerCase();
+  } else {
+    var base = num(q.sqft, 0) / (num(s.sqftPerHour, 450) || 450)
+             + num(q.beds, 0) * num(s.minsBed, 0) / 60
+             + num(q.baths, 0) * num(s.minsBath, 0) / 60;
+    hours = base * factor(s.svcFactors[q.svcType], 1) * factor(s.condFactors[q.condition], 1);
+    if(q.pricingModel === "flat"){
+      serviceGross = tierPrice(num(q.sqft,0), s) * factor(s.svcFactors[q.svcType], 1) * factor(s.condFactors[q.condition], 1);
+    } else {
+      serviceGross = hours * num(s.hourlyRate, 0);
+    }
+    (q.addons||[]).forEach(function(a){
+      var def = addonById(s, a.id); if(!def) return;
+      var qty = num(a.qty, 0); if(qty <= 0) return;
+      var lineTotal = qty * num(def.price, 0);
+      addonLines.push({id:def.id, name:def.name, qty:qty, price:num(def.price,0), total:lineTotal});
+      addonsTotal += lineTotal;
+    });
+    scope = svcName(q.svcType) + " — " + num(q.sqft,0).toLocaleString() + " sq ft home, "
+      + num(q.beds,0) + " bed / " + num(q.baths,0) + " bath, " + condName(q.condition).split(" — ")[0].toLowerCase() + " condition";
+  }
+  var serviceNet = serviceGross * (1 - disc);
+  var price = serviceNet + addonsTotal;
+  var crew = Math.max(1, Math.round(num(q.crew, 1)));
+  var laborCost = hours * num(s.crewPay, 0);
+  var suppliesCost = laborCost * num(s.suppliesPct, 0) / 100;
+  var travelCost = num(q.travelMiles, 0) * num(s.mileCost, 0);
+  var trueCost = laborCost + suppliesCost + travelCost;
+  var breakEven = trueCost * (1 + num(s.overheadPct, 0)/100);
+  var floorPrice = breakEven / (1 - pctC(s.floorMargin, 30)/100);
+  if(floorPrice < num(s.minJob, 0)) floorPrice = num(s.minJob, 0);
+  var recommended = breakEven / (1 - pctC(s.targetMargin, 45)/100);
+  if(recommended < floorPrice) recommended = floorPrice;
+  var visitsYear = freq.visitsYear;
+  return {
+    hours:hours, elapsed: crew > 0 ? hours/crew : hours, crew:crew,
+    serviceGross:serviceGross, discountPct:disc*100, serviceNet:serviceNet,
+    addonLines:addonLines, addonsTotal:addonsTotal, price:price,
+    laborCost:laborCost, suppliesCost:suppliesCost, travelCost:travelCost,
+    trueCost:trueCost, breakEven:breakEven, floorPrice:floorPrice, recommended:recommended,
+    visitsYear:visitsYear, visitsMonth: visitsYear/12,
+    monthlyValue: price * visitsYear / 12, annualValue: price * visitsYear,
+    scope:scope
+  };
+}
+function marginAt(price, c){ if(!price || price <= 0 || !isFinite(price)) return 0; return (price - c.breakEven) / price * 100; }
+function recurringAt(finalPrice, q){
+  var vy = freqById(q.frequency).visitsYear;
+  return { visitsYear:vy, monthly: finalPrice * vy / 12, annual: finalPrice * vy };
+}
+function makeSnapshot(c, fin){
+  return { scope: c.scope, elapsed: c.elapsed, crew: c.crew,
+    addonLines: (c.addonLines||[]).map(function(l){ return {id:l.id, name:l.name, qty:l.qty, price:l.price, total:l.total}; }),
+    addonsTotal: c.addonsTotal, finalPrice: fin, savedAt: Date.now() };
+}
+function isPlaceholderIdentity(s){
+  if(!s) return true;
+  var co = String(s.company||"").trim();
+  if(!co) return true;
+  if(/demo/i.test(co)) return true;
+  if(/sparkle/i.test(co)) return true;
+  if(String(s.phone||"").indexOf("555") >= 0) return true;
+  var em = String(s.email||"");
+  if(/\.example$/i.test(em.trim()) || /@.*\.example/i.test(em) || /sparkleandshine\.example/i.test(em)) return true;
+  return false;
+}
+
+/* ---------- sanitizing ---------- */
+function sanitizeSettings(raw){
+  var d = defaultSettings();
+  if(!raw || typeof raw !== "object") return d;
+  var s = d;
+  ["company","phone","email","terms"].forEach(function(k){ if(typeof raw[k] === "string") s[k] = raw[k].slice(0, 2000); });
+  ["hourlyRate","crewPay","mileCost","overSqftRate"].forEach(function(k){ s[k] = num(raw[k], d[k]); });
+  ["suppliesPct","overheadPct"].forEach(function(k){ s[k] = num(raw[k], d[k]); if(s[k] > 500) s[k] = 500; });
+  ["floorMargin","targetMargin"].forEach(function(k){ s[k] = pctC(raw[k], d[k]); });
+  s.minJob = num(raw.minJob, d.minJob);
+  s.sqftPerHour = num(raw.sqftPerHour, d.sqftPerHour); if(s.sqftPerHour <= 0) s.sqftPerHour = d.sqftPerHour;
+  s.minsBed = num(raw.minsBed, d.minsBed); s.minsBath = num(raw.minsBath, d.minsBath);
+  SERVICE_TYPES.forEach(function(t){ s.svcFactors[t.id] = factor(raw.svcFactors && raw.svcFactors[t.id], d.svcFactors[t.id]); });
+  CONDITIONS.forEach(function(t){ s.condFactors[t.id] = factor(raw.condFactors && raw.condFactors[t.id], d.condFactors[t.id]); });
+  AREA_TYPES.forEach(function(t){ s.prodRates[t.id] = num(raw.prodRates && raw.prodRates[t.id], d.prodRates[t.id]); if(s.prodRates[t.id] <= 0) s.prodRates[t.id] = d.prodRates[t.id]; });
+  PERIODS.forEach(function(t){ s.periodFactors[t.id] = factor(raw.periodFactors && raw.periodFactors[t.id], d.periodFactors[t.id]); });
+  FREQUENCIES.forEach(function(t){ s.freqDiscounts[t.id] = pctC(raw.freqDiscounts && raw.freqDiscounts[t.id], d.freqDiscounts[t.id]); });
+  if(Array.isArray(raw.tiers)){
+    var tiers = [];
+    raw.tiers.forEach(function(t){
+      if(!t || typeof t !== "object") return;
+      var upTo = num(t.upTo, 0); if(upTo <= 0) return;
+      tiers.push({upTo:upTo, price:num(t.price, 0)});
+    });
+    tiers.sort(function(a,b){ return a.upTo - b.upTo; });
+    if(tiers.length) s.tiers = tiers;
+  }
+  if(Array.isArray(raw.addons)){
+    var adds = [], seen = {};
+    raw.addons.forEach(function(a){
+      if(!a || typeof a !== "object") return;
+      var id = String(a.id||"").replace(/[^a-z0-9_-]/gi,"").slice(0,30);
+      var name = String(a.name||"").slice(0,60);
+      if(!id || !name || seen[id]) return;
+      seen[id] = true;
+      adds.push({id:id, name:name, price:num(a.price, 0)});
+    });
+    if(adds.length) s.addons = adds;
+  }
+  return s;
+}
+function sanitizeQuote(raw){
+  if(!raw || typeof raw !== "object") return null;
+  var client = String(raw.client||"").slice(0,120);
+  if(!client.trim()) return null;
+  if(!validDate(raw.date)) return null;
+  var mode = raw.mode === "com" ? "com" : "res";
+  var q = {
+    id: String(raw.id || ("q" + Date.now() + "-" + Math.floor(Math.random()*100000))),
+    demo: !!raw.demo, mode: mode,
+    client: client, date: raw.date,
+    address: String(raw.address||"").slice(0,200),
+    crew: Math.max(1, Math.round(num(raw.crew, 1))),
+    travelMiles: num(raw.travelMiles, 0),
+    frequency: freqById(raw.frequency).id,
+    notes: String(raw.notes||"").slice(0,500),
+    terms: String(raw.terms||"").slice(0,2000),
+    status: STATUSES.indexOf(raw.status) >= 0 ? raw.status : "draft",
+    created: isFinite(+raw.created) && +raw.created > 0 ? +raw.created : Date.now(),
+    finalPrice: num(raw.finalPrice, 0),
+    floorOverride: !!raw.floorOverride
+  };
+  if(raw.snapshot && typeof raw.snapshot === "object"){
+    var sn = raw.snapshot;
+    var snapLines = [];
+    if(Array.isArray(sn.addonLines)){
+      sn.addonLines.forEach(function(l){
+        if(!l || typeof l !== "object") return;
+        snapLines.push({ id:String(l.id||"").slice(0,30), name:String(l.name||"").slice(0,60), qty:num(l.qty,0), price:num(l.price,0), total:num(l.total,0) });
+      });
+    }
+    q.snapshot = { scope:String(sn.scope||"").slice(0,500), elapsed:num(sn.elapsed,0),
+      crew: Math.max(1, Math.round(num(sn.crew,1))), addonsTotal:num(sn.addonsTotal,0),
+      finalPrice:num(sn.finalPrice,0), savedAt: isFinite(+sn.savedAt) && +sn.savedAt>0 ? +sn.savedAt : Date.now(),
+      addonLines: snapLines };
+  }
+  if(mode === "res"){
+    q.sqft = num(raw.sqft, 0); q.beds = num(raw.beds, 0); q.baths = num(raw.baths, 0);
+    q.svcType = SERVICE_TYPES.some(function(t){return t.id===raw.svcType;}) ? raw.svcType : "standard";
+    q.condition = CONDITIONS.some(function(t){return t.id===raw.condition;}) ? raw.condition : "light";
+    q.pricingModel = raw.pricingModel === "flat" ? "flat" : "hourly";
+    q.addons = [];
+    if(Array.isArray(raw.addons)){
+      raw.addons.forEach(function(a){
+        if(!a || typeof a !== "object") return;
+        var qty = num(a.qty, 0); if(qty <= 0) return;
+        q.addons.push({id:String(a.id||"").slice(0,30), qty:qty});
+      });
+    }
+  } else {
+    q.sqft = num(raw.sqft, 0);
+    q.areaType = AREA_TYPES.some(function(t){return t.id===raw.areaType;}) ? raw.areaType : "office";
+    q.period = PERIODS.some(function(t){return t.id===raw.period;}) ? raw.period : "standard";
+  }
+  return q;
+}
+
+/* ---------- demo data ---------- */
+function demoQuotes(s){
+  var now = Date.now(), day = 86400000;
+  function mk(o){ o.terms = s.terms; var c = computeQuote(o, s); o.finalPrice = Math.round(c.price*100)/100; o.snapshot = makeSnapshot(c, o.finalPrice); return o; }
+  return [
+    mk({ id:"demo-1", demo:true, mode:"res", client:"The Hendersons (DEMO)", date:todayStr(),
+      address:"4821 Willow Creek Ln", crew:2, travelMiles:10, frequency:"onetime",
+      sqft:2000, beds:4, baths:3, svcType:"deep", condition:"moderate", pricingModel:"hourly",
+      addons:[{id:"fridge",qty:1},{id:"oven",qty:1}], notes:"First deep clean — referred by a neighbor.",
+      status:"booked", created: now - 3*day }),
+    mk({ id:"demo-2", demo:true, mode:"res", client:"Rosa Alvarez (DEMO)", date:todayStr(),
+      address:"117 Sycamore St", crew:1, travelMiles:6, frequency:"biweekly",
+      sqft:1450, beds:3, baths:2, svcType:"standard", condition:"light", pricingModel:"flat",
+      addons:[], notes:"", status:"sent", created: now - 12*day }),
+    mk({ id:"demo-3", demo:true, mode:"com", client:"Main Street Dental (DEMO)", date:todayStr(),
+      address:"220 Main St, Suite B", crew:2, travelMiles:8, frequency:"weekly",
+      sqft:3600, areaType:"medical", period:"night",
+      notes:"Keypad entry; alarm code in office file.", status:"accepted", created: now - 5*day }),
+    mk({ id:"demo-4", demo:true, mode:"res", client:"J. Park — rental move-out (DEMO)", date:todayStr(),
+      address:"88 College Ave, Apt 4", crew:2, travelMiles:15, frequency:"onetime",
+      sqft:1100, beds:2, baths:1, svcType:"move", condition:"heavy", pricingModel:"hourly",
+      addons:[{id:"baseboards",qty:1}], notes:"Landlord wanted it cheaper — declined at our price.",
+      status:"declined", created: now - 9*day })
+  ];
+}
+
+/* ---------- persistence ---------- */
+var state = { settings: defaultSettings(), quotes: [], demoSeeded:false };
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function load(){
+  var raw = null;
+  try{ raw = localStorage.getItem(STORE_KEY); }catch(e){}
+  if(!raw){
+    state.settings = defaultSettings();
+    state.quotes = demoQuotes(state.settings);
+    state.demoSeeded = true;
+    save(); return;
+  }
+  try{
+    var parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed !== "object" || !parsed.settings || !Array.isArray(parsed.quotes)) throw new Error("bad shape");
+    state.settings = sanitizeSettings(parsed.settings);
+    state.quotes = [];
+    parsed.quotes.forEach(function(rq){ var q = sanitizeQuote(rq); if(q) state.quotes.push(q); });
+    state.demoSeeded = !!parsed.demoSeeded;
+    state.legal = parsed.legal || null;
+  }catch(e){
+    try{ localStorage.setItem(STORE_KEY + "_corrupt_backup", raw); }catch(e2){}
+    state.settings = defaultSettings();
+    state.quotes = demoQuotes(state.settings);
+    state.demoSeeded = true;
+    save();
+  }
+}
+
+/* exposed for testing */
+window.CQ = { computeQuote:computeQuote, marginAt:marginAt, recurringAt:recurringAt, tierPrice:tierPrice,
+  makeSnapshot:makeSnapshot, isPlaceholderIdentity:isPlaceholderIdentity,
+  num:num, esc:esc, money:money, validDate:validDate, sanitizeSettings:sanitizeSettings,
+  sanitizeQuote:sanitizeQuote, defaultSettings:defaultSettings, demoQuotes:demoQuotes,
+  SERVICE_TYPES:SERVICE_TYPES, CONDITIONS:CONDITIONS, AREA_TYPES:AREA_TYPES, PERIODS:PERIODS, FREQUENCIES:FREQUENCIES };
+</script>
+
+<script>
+"use strict";
+/* ================= CleanQuote — UI ================= */
+var $ = function(id){ return document.getElementById(id); };
+var curMode = "res";
+var editingId = null;
+var floorOverrideChecked = false;
+var finalTouched = false;
+var lastCalc = null;
+
+function switchView(name){
+  var views = document.querySelectorAll("section.view");
+  for(var i=0;i<views.length;i++) views[i].classList.toggle("active", views[i].id === "view-"+name);
+  var btns = document.querySelectorAll("#tabs button");
+  for(var j=0;j<btns.length;j++) btns[j].classList.toggle("active", btns[j].getAttribute("data-view") === name);
+  if(name === "book") renderBook();
+  window.scrollTo(0,0);
+}
+
+/* ---------- builder ---------- */
+function setMode(m){
+  curMode = m;
+  $("modeRes").classList.toggle("active", m === "res");
+  $("modeCom").classList.toggle("active", m === "com");
+  $("panelRes").style.display = m === "res" ? "" : "none";
+  $("panelCom").style.display = m === "com" ? "" : "none";
+  recalc();
+}
+function fillBuilderSelects(){
+  var s = state.settings;
+  var keep = {};
+  ["qFreq","rSvc","rCond","cArea","cPeriod"].forEach(function(id){ keep[id] = $(id).value; });
+  $("qFreq").innerHTML = FREQUENCIES.map(function(f){
+    var d = pctC(s.freqDiscounts[f.id], 0);
+    return '<option value="'+f.id+'">'+esc(f.name)+(d>0 ? " (−"+d+"%)" : "")+(f.visitsYear ? " · "+f.visitsYear+"/yr" : "")+"</option>";
+  }).join("");
+  $("rSvc").innerHTML = SERVICE_TYPES.map(function(t){
+    return '<option value="'+t.id+'">'+esc(t.name)+" (×"+factor(s.svcFactors[t.id],1)+")</option>";
+  }).join("");
+  $("rCond").innerHTML = CONDITIONS.map(function(t){
+    return '<option value="'+t.id+'">'+esc(t.name)+" (×"+factor(s.condFactors[t.id],1)+")</option>";
+  }).join("");
+  $("cArea").innerHTML = AREA_TYPES.map(function(t){
+    return '<option value="'+t.id+'">'+esc(t.name)+" ("+num(s.prodRates[t.id],0).toLocaleString()+" sq ft/hr)</option>";
+  }).join("");
+  $("cPeriod").innerHTML = PERIODS.map(function(t){
+    return '<option value="'+t.id+'">'+esc(t.name)+" (×"+factor(s.periodFactors[t.id],1)+")</option>";
+  }).join("");
+  ["qFreq","rSvc","rCond","cArea","cPeriod"].forEach(function(id){ if(keep[id]) $(id).value = keep[id]; });
+}
+function renderAddonRows(qtys){
+  qtys = qtys || {};
+  $("addonRows").innerHTML = state.settings.addons.map(function(a){
+    return '<div class="addon-row"><span class="an">'+esc(a.name)+'</span><span></span>'
+      + '<span class="ap">'+money(a.price)+' each</span>'
+      + '<input inputmode="decimal" type="number" class="addon-qty" data-id="'+esc(a.id)+'" min="0" step="1" value="'+num(qtys[a.id],0)+'"></div>';
+  }).join("");
+  document.querySelectorAll(".addon-qty").forEach(function(el){
+    el.addEventListener("input", recalc); el.addEventListener("change", recalc);
+  });
+}
+function readForm(){
+  var addons = [];
+  document.querySelectorAll(".addon-qty").forEach(function(el){
+    var qty = num(el.value, 0);
+    if(qty > 0) addons.push({id: el.getAttribute("data-id"), qty: qty});
+  });
+  var q = {
+    mode: curMode,
+    client: $("qClient").value, date: $("qDate").value || todayStr(),
+    address: $("qAddress").value, crew: num($("qCrew").value, 1),
+    travelMiles: num($("qMiles").value, 0), frequency: $("qFreq").value,
+    notes: $("qNotes").value, terms: $("qTerms").value
+  };
+  if(curMode === "res"){
+    q.sqft = num($("rSqft").value, 0); q.beds = num($("rBeds").value, 0); q.baths = num($("rBaths").value, 0);
+    q.svcType = $("rSvc").value; q.condition = $("rCond").value; q.pricingModel = $("rModel").value;
+    q.addons = addons;
+  } else {
+    q.sqft = num($("cSqft").value, 0); q.areaType = $("cArea").value; q.period = $("cPeriod").value;
+  }
+  return q;
+}
+function recalc(){
+  var q = readForm();
+  var c = computeQuote(q, state.settings);
+  lastCalc = c;
+  var f = freqById(q.frequency);
+  $("freqNote").textContent = f.visitsYear
+    ? f.name + ": " + f.visitsYear + " visits a year. The frequency discount is already in the price; the recurring-value box below shows what this client is worth."
+    : "One-time job — no frequency discount, no recurring value.";
+  var rows = "";
+  rows += "<tr><td>Estimated time</td><td class='num'>"+c.hours.toFixed(2)+" cleaner-hrs (≈ "+c.elapsed.toFixed(2)+" hrs on site, crew of "+c.crew+")</td></tr>";
+  rows += "<tr><td>Service price"+(q.mode==="res" && q.pricingModel==="flat" ? " (flat tier)" : "")+"</td><td class='num'>"+money(c.serviceGross)+"</td></tr>";
+  if(c.discountPct > 0) rows += "<tr><td>Frequency discount (−"+c.discountPct+"% on service)</td><td class='num'>−"+money(c.serviceGross - c.serviceNet)+"</td></tr>";
+  if(c.addonsTotal > 0) rows += "<tr><td>Add-ons</td><td class='num'>"+money(c.addonsTotal)+"</td></tr>";
+  rows += "<tr><td colspan='2' style='border-bottom:none;padding-bottom:0'><strong>Your costs</strong></td></tr>";
+  rows += "<tr><td>Labor ("+c.hours.toFixed(2)+" hrs × crew pay)</td><td class='num'>"+money(c.laborCost)+"</td></tr>";
+  rows += "<tr><td>Supplies ("+num(state.settings.suppliesPct,0)+"% of labor)</td><td class='num'>"+money(c.suppliesCost)+"</td></tr>";
+  rows += "<tr><td>Travel ("+num(q.travelMiles,0)+" mi round trip)</td><td class='num'>"+money(c.travelCost)+"</td></tr>";
+  rows += "<tr><td><strong>True job cost</strong></td><td class='num'><strong>"+money(c.trueCost)+"</strong></td></tr>";
+  rows += "<tr><td>Break-even (cost + "+num(state.settings.overheadPct,0)+"% overhead)</td><td class='num'>"+money(c.breakEven)+"</td></tr>";
+  $("costBreakdown").innerHTML = '<div class="tblwrap"><table><tbody>'+rows+"</tbody></table></div>";
+  $("kBreak").textContent = money(c.breakEven);
+  $("kRec").textContent = money(c.recommended);
+  $("kEng").textContent = money(c.price);
+  var finalEl = $("qFinal");
+  if(document.activeElement !== finalEl && !finalTouched && c.recommended > 0){
+    finalEl.value = c.recommended.toFixed(2);
+  }
+  var fin = num(finalEl.value, 0);
+  var m = marginAt(fin, c);
+  $("qMarginShow").value = fin > 0 ? m.toFixed(1) + "%" : "—";
+  var rv = recurringAt(fin > 0 ? fin : c.price, q);
+  if(rv.visitsYear > 0){
+    $("recurBox").innerHTML = '<div class="kpi"><div class="k"><div class="l">Recurring value — monthly ('+rv.visitsYear+' visits/yr)</div><div class="v good">'+money(rv.monthly)+'</div></div>'
+      + '<div class="k"><div class="l">Recurring value — annual</div><div class="v good">'+money(rv.annual)+'</div></div></div>'
+      + '<p class="muted" style="margin:6px 0 0">At the '+(fin > 0 ? "final" : "engine")+' per-visit price. This is what this client is worth — weigh it against the discount you gave.</p>';
+  } else {
+    $("recurBox").innerHTML = "";
+  }
+  var stickyEl = $("stickyTotal");
+  if(stickyEl){ var finSticky = num($("qFinal").value, 0); stickyEl.textContent = "Per visit: " + money(finSticky > 0 ? finSticky : c.price); }
+  var box = $("floorBox");
+  if(fin > 0 && fin < c.floorPrice){
+    box.innerHTML = '<div class="floorbox"><strong class="bad">⚠ BELOW YOUR PROFIT FLOOR.</strong> '
+      + 'Floor price is <strong>'+money(c.floorPrice)+'</strong> (min margin '+pctC(state.settings.floorMargin,30)+'%'
+      + (num(state.settings.minJob,0) > 0 ? ' and min job charge '+money(state.settings.minJob) : '')+'). '
+      + 'At '+money(fin)+' your margin is '+m.toFixed(1)+'%. Raise the price, or override consciously: '
+      + '<label style="display:block;margin-top:8px;color:var(--ink);font-size:14px"><input type="checkbox" id="floorOverride"'+(floorOverrideChecked ? " checked" : "")+'> I understand — save below the floor anyway</label></div>';
+    var ovEl = $("floorOverride");
+    if(ovEl) ovEl.addEventListener("change", function(){ floorOverrideChecked = this.checked; });
+  } else if(fin > 0){
+    floorOverrideChecked = false;
+    box.innerHTML = '<div class="floorbox ok"><strong class="good">✓ Above the profit floor</strong> ('+money(c.floorPrice)+'). Margin at this price: '+m.toFixed(1)+'%.</div>';
+  } else {
+    box.innerHTML = "";
+  }
+}
+function saveQuote(){
+  var q = readForm();
+  var c = lastCalc || computeQuote(q, state.settings);
+  var fin = num($("qFinal").value, 0);
+  var msg = $("saveMsg");
+  if(!q.client.trim()){ msg.innerHTML = '<span class="bad">Enter a client name first.</span>'; return; }
+  if(!(num(q.sqft,0) > 0)){ msg.innerHTML = '<span class="bad">Enter the '+(q.mode==="com" ? "space" : "home")+' size (sq ft) first.</span>'; return; }
+  if(fin <= 0){ msg.innerHTML = '<span class="bad">Enter a final price.</span>'; return; }
+  var override = $("floorOverride");
+  var isOverride = fin < c.floorPrice && (floorOverrideChecked || (override && override.checked));
+  if(fin < c.floorPrice && !isOverride){
+    msg.innerHTML = '<span class="bad">Blocked by your profit floor — raise the price to at least '+money(c.floorPrice)+' or tick the override box.</span>'; return;
+  }
+  if(editingId){
+    var rec = null;
+    state.quotes.forEach(function(x){ if(x.id === editingId) rec = x; });
+    if(rec){
+      var keepStatus = rec.status, keepCreated = rec.created;
+      Object.keys(q).forEach(function(k){ rec[k] = q[k]; });
+      rec.status = keepStatus; rec.created = keepCreated;
+      rec.finalPrice = fin; rec.floorOverride = !!isOverride; rec.snapshot = makeSnapshot(c, fin); delete rec.demo;
+      save();
+      msg.innerHTML = '<span class="good">Quote updated ✓</span> — see it in the Quote Book.';
+    }
+    editingId = null;
+  } else {
+    var record = JSON.parse(JSON.stringify(q));
+    record.id = "q" + Date.now() + "-" + Math.floor(Math.random()*100000);
+    record.finalPrice = fin; record.floorOverride = !!isOverride; record.snapshot = makeSnapshot(c, fin);
+    record.status = "draft"; record.created = Date.now();
+    state.quotes.unshift(record);
+    save();
+    msg.innerHTML = '<span class="good">Saved ✓</span> as a Draft — mark it Sent in the Quote Book when it goes out.';
+  }
+  floorOverrideChecked = false;
+  finalTouched = false;
+  renderBook();
+}
+function resetQuote(){
+  editingId = null; floorOverrideChecked = false; finalTouched = false;
+  $("qClient").value = ""; $("qAddress").value = ""; $("qDate").value = todayStr();
+  $("qCrew").value = 2; $("qMiles").value = 10; $("qFreq").value = "onetime";
+  $("qFinal").value = ""; $("qNotes").value = "";
+  $("qTerms").value = state.settings.terms;
+  $("rSqft").value = 2000; $("rBeds").value = 4; $("rBaths").value = 3;
+  $("rSvc").value = "standard"; $("rCond").value = "light"; $("rModel").value = "hourly";
+  $("cSqft").value = 3200; $("cArea").value = "office"; $("cPeriod").value = "standard";
+  renderAddonRows({});
+  $("saveMsg").textContent = "";
+  setMode("res");
+}
+function loadEdit(q){
+  editingId = q.id; floorOverrideChecked = false; finalTouched = true;
+  setMode(q.mode);
+  $("qClient").value = q.client; $("qDate").value = q.date; $("qAddress").value = q.address || "";
+  $("qCrew").value = q.crew; $("qMiles").value = q.travelMiles; $("qFreq").value = q.frequency;
+  $("qNotes").value = q.notes || ""; $("qTerms").value = q.terms || state.settings.terms;
+  if(q.mode === "res"){
+    $("rSqft").value = q.sqft; $("rBeds").value = q.beds; $("rBaths").value = q.baths;
+    $("rSvc").value = q.svcType; $("rCond").value = q.condition; $("rModel").value = q.pricingModel;
+    var qtys = {};
+    (q.addons||[]).forEach(function(a){ qtys[a.id] = a.qty; });
+    renderAddonRows(qtys);
+  } else {
+    $("cSqft").value = q.sqft; $("cArea").value = q.areaType; $("cPeriod").value = q.period;
+    renderAddonRows({});
+  }
+  $("qFinal").value = num(q.finalPrice, 0) > 0 ? num(q.finalPrice,0).toFixed(2) : "";
+  recalc();
+  switchView("quote");
+  $("saveMsg").innerHTML = '<span class="good">Editing saved quote</span> — the floor override (if any) must be re-ticked; Save updates this quote.';
+}
+
+/* ---------- print ---------- */
+function buildPrint(q){
+  var s = state.settings;
+  var c = computeQuote(q, s);
+  var snap = (q && q.snapshot && typeof q.snapshot === "object") ? q.snapshot : null;
+  var fin = snap && num(snap.finalPrice, 0) > 0 ? num(snap.finalPrice, 0) : (num(q.finalPrice, 0) > 0 ? num(q.finalPrice, 0) : c.price);
+  var rv = recurringAt(fin, q);
+  var dispScope = snap && snap.scope ? snap.scope : c.scope;
+  var dispElapsed = snap && isFinite(+snap.elapsed) ? +snap.elapsed : c.elapsed;
+  var dispCrew = snap && snap.crew ? snap.crew : c.crew;
+  var lineSrc = snap && Array.isArray(snap.addonLines) ? snap.addonLines : c.addonLines;
+  var lines = lineSrc.map(function(l){
+    return "<tr><td>"+esc(l.name)+"</td><td class='num'>"+l.qty+"</td><td class='num'>"+money(l.price)+"</td><td class='num'>"+money(l.total)+"</td></tr>";
+  }).join("");
+  var warnHtml = isPlaceholderIdentity(s) ? "<p class='demo-warn' style='border:2px solid #c23333;background:#fdf0f0;padding:10px;font-weight:700'>\u26a0 DEMO \u2014 set your business details in Settings before sending this quote.</p>" : "";
+  $("printArea").innerHTML =
+    warnHtml
+    + "<h1>"+esc(s.company || "Cleaning Service")+"</h1>"
+    + "<p>"+esc(s.phone)+(s.email ? " &nbsp; "+esc(s.email) : "")+"</p>"
+    + "<h2 style='font-size:17px'>Cleaning Service Quote</h2>"
+    + "<p><strong>Client:</strong> "+esc(q.client)+"<br><strong>Location:</strong> "+esc(q.address||"")+"<br><strong>Date:</strong> "+esc(q.date)+"</p>"
+    + "<p><strong>Scope:</strong> "+esc(dispScope)+"<br><strong>Frequency:</strong> "+esc(freqById(q.frequency).name)
+    + "<br><strong>Estimated time on site:</strong> ≈ "+dispElapsed.toFixed(1)+" hrs (crew of "+dispCrew+")</p>"
+    + (lines ? "<table><thead><tr><th>Add-on</th><th class='num'>Qty</th><th class='num'>Each</th><th class='num'>Amount</th></tr></thead><tbody>"+lines+"</tbody></table>" : "")
+    + "<p style='text-align:right;font-size:16px'><strong>Price per visit: "+money(fin)+"</strong></p>"
+    + (rv.visitsYear > 0 ? "<p style='text-align:right'>Recurring value: <strong>"+money(rv.monthly)+" / month</strong> · <strong>"+money(rv.annual)+" / year</strong> ("+rv.visitsYear+" visits)</p>" : "")
+    + "<p style='font-size:12.5px'>"+esc(q.terms || s.terms)+"</p>"
+    + "<p style='margin-top:26px'>Accepted by (signature): ______________________________ &nbsp; Printed name: ______________________ &nbsp; Date: ____________</p>"
+    + "<p style='color:#444;font-size:12px'>Thank you for the opportunity to earn your business.</p>";
+}
+
+/* ---------- quote book ---------- */
+function statusPill(st){ return '<span class="pill '+st+'">'+st.toUpperCase()+"</span>"; }
+function ageDays(q){ var ts = +q.created; if(!isFinite(ts) || ts <= 0) ts = Date.now(); return Math.max(0, Math.floor((Date.now() - ts) / 86400000)); }
+function renderBook(){
+  var qs = state.quotes;
+  var booked = qs.filter(function(q){ return q.status === "booked"; });
+  var bookedValue = booked.reduce(function(a,q){
+    var rv = recurringAt(num(q.finalPrice,0), q);
+    return a + (rv.visitsYear > 0 ? rv.annual : num(q.finalPrice,0));
+  }, 0);
+  var sent = qs.filter(function(q){ return q.status === "sent"; });
+  $("bookKpis").innerHTML =
+    '<div class="k"><div class="l">Quotes saved</div><div class="v">'+qs.length+'</div></div>'
+    + '<div class="k"><div class="l">Booked</div><div class="v">'+booked.length+'</div></div>'
+    + '<div class="k"><div class="l">Booked value (annualized)</div><div class="v">'+money(bookedValue)+'</div></div>'
+    + '<div class="k"><div class="l">Waiting on a reply</div><div class="v">'+sent.length+'</div></div>';
+  var follow = sent.slice().sort(function(a,b){ return a.created - b.created; });
+  $("followEmpty").textContent = follow.length ? "" : "Nothing waiting. When you mark a quote Sent, it lands here until the client answers.";
+  $("followList").innerHTML = follow.map(function(q){
+    var rv = recurringAt(num(q.finalPrice,0), q);
+    return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><strong>'+esc(q.client)+'</strong> — '+money(q.finalPrice)+' per visit'
+      + (rv.visitsYear > 0 ? ' · worth '+money(rv.annual)+'/yr' : '')
+      + ' · <span class="warn"><strong>'+ageDays(q)+' days waiting</strong></span> '
+      + '<button class="btn secondary small" data-fact="nudge" data-id="'+esc(q.id)+'">Mark accepted</button> '
+      + '<button class="btn secondary small" data-fact="print" data-id="'+esc(q.id)+'">Re-print</button></div>';
+  }).join("");
+  $("bookEmpty").textContent = qs.length ? "" : "No saved quotes yet. Build one in the Quote Builder and hit Save quote.";
+  $("bookBody").innerHTML = qs.map(function(q){
+    var c = computeQuote(q, state.settings);
+    var rv = recurringAt(num(q.finalPrice,0), q);
+    var stOpts = STATUSES.map(function(st){
+      return '<option value="'+st+'"'+(q.status===st ? " selected" : "")+">"+st+"</option>";
+    }).join("");
+    var dispScopeBook = (q.snapshot && q.snapshot.scope) ? q.snapshot.scope : c.scope;
+    return "<tr><td data-label='Date'>"+esc(q.date)+"</td><td data-label='Client'>"+esc(q.client)+(q.demo ? ' <span class="pill draft">DEMO</span>' : "")+(q.floorOverride ? ' <span class="pill declined">BELOW FLOOR</span>' : "")+"</td>"
+      + "<td data-label='Job'>"+esc(dispScopeBook.split(" — ")[0])+" · "+esc(freqById(q.frequency).name)+"</td>"
+      + "<td class='num' data-label='Per visit'>"+money(q.finalPrice)+"</td>"
+      + "<td class='num' data-label='Monthly'>"+(rv.visitsYear > 0 ? money(rv.monthly) : "—")+"</td>"
+      + "<td class='num' data-label='Margin'>"+marginAt(num(q.finalPrice,0), c).toFixed(1)+"%</td>"
+      + "<td data-label='Status'>"+'<select class="row-status" data-id="'+esc(q.id)+'" style="width:auto;min-height:34px;padding:4px">'+stOpts+"</select></td>"
+      + '<td data-label="Actions"><button class="btn secondary small" data-act="edit" data-id="'+esc(q.id)+'">Edit</button> '
+      + '<button class="btn secondary small" data-act="print" data-id="'+esc(q.id)+'">Print</button> '
+      + '<button class="btn danger small" data-act="del" data-id="'+esc(q.id)+'">Delete</button></td></tr>';
+  }).join("");
+  $("bookBody").querySelectorAll("button[data-act]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = this.getAttribute("data-id"), act = this.getAttribute("data-act");
+      var q = null;
+      state.quotes.forEach(function(x){ if(x.id === id) q = x; });
+      if(!q) return;
+      if(act === "del"){
+        if(!window.confirm("Delete this saved quote for \"" + (q.client || "this client") + "\"? This cannot be undone.")) return;
+        state.quotes = state.quotes.filter(function(x){ return x.id !== id; });
+        if(editingId === id) editingId = null;
+        save(); renderBook(); return;
+      }
+      if(act === "print"){ buildPrint(q); window.print(); return; }
+      if(act === "edit"){ loadEdit(q); return; }
+    });
+  });
+  $("bookBody").querySelectorAll("select.row-status").forEach(function(sel){
+    sel.addEventListener("change", function(){
+      var id = this.getAttribute("data-id");
+      state.quotes.forEach(function(x){ if(x.id === id){ x.status = sel.value; delete x.demo; } });
+      save(); renderBook();
+    });
+  });
+  $("followList").querySelectorAll("button[data-fact]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var id = this.getAttribute("data-id"), act = this.getAttribute("data-fact");
+      var q = null;
+      state.quotes.forEach(function(x){ if(x.id === id) q = x; });
+      if(!q) return;
+      if(act === "nudge"){ q.status = "accepted"; delete q.demo; save(); renderBook(); return; }
+      if(act === "print"){ buildPrint(q); window.print(); return; }
+    });
+  });
+}
+
+/* ---------- settings ---------- */
+function renderSettings(){
+  var s = state.settings;
+  $("sCompany").value = s.company; $("sPhone").value = s.phone; $("sEmail").value = s.email; $("sTerms").value = s.terms;
+  $("sHourly").value = s.hourlyRate; $("sCrewPay").value = s.crewPay; $("sSupplies").value = s.suppliesPct;
+  $("sMile").value = s.mileCost; $("sOverhead").value = s.overheadPct; $("sFloor").value = s.floorMargin;
+  $("sTarget").value = s.targetMargin; $("sMinJob").value = s.minJob;
+  $("sSqftHr").value = s.sqftPerHour; $("sMinsBed").value = s.minsBed; $("sMinsBath").value = s.minsBath;
+  $("svcFactorBody").innerHTML = SERVICE_TYPES.map(function(t){
+    return "<tr><td>"+esc(t.name)+'</td><td><input inputmode="decimal" class="svc-factor" data-id="'+t.id+'" type="number" min="0" step="0.05" value="'+s.svcFactors[t.id]+'"></td></tr>';
+  }).join("");
+  $("condFactorBody").innerHTML = CONDITIONS.map(function(t){
+    return "<tr><td>"+esc(t.name)+'</td><td><input inputmode="decimal" class="cond-factor" data-id="'+t.id+'" type="number" min="0" step="0.05" value="'+s.condFactors[t.id]+'"></td></tr>';
+  }).join("");
+  $("tierBody").innerHTML = s.tiers.map(function(t){
+    return '<tr><td><input inputmode="decimal" class="tier-upto" type="number" min="1" step="50" value="'+t.upTo+'"></td>'
+      + '<td><input inputmode="decimal" class="tier-price" type="number" min="0" step="1" value="'+t.price+'"></td>'
+      + '<td><button class="btn danger small tier-del" type="button">Remove</button></td></tr>';
+  }).join("");
+  $("sOverRate").value = s.overSqftRate;
+  document.querySelectorAll(".tier-del").forEach(function(b){
+    b.addEventListener("click", function(){
+      var tr = this.closest("tr"); if(tr) tr.remove();
+    });
+  });
+  $("addonSetBody").innerHTML = s.addons.map(function(a){
+    return '<tr><td><input class="addon-name" data-id="'+esc(a.id)+'" type="text" value="'+esc(a.name)+'"></td>'
+      + '<td><input inputmode="decimal" class="addon-price" data-id="'+esc(a.id)+'" type="number" min="0" step="1" value="'+a.price+'"></td>'
+      + '<td><button class="btn danger small addon-del" data-id="'+esc(a.id)+'" type="button">Remove</button></td></tr>';
+  }).join("");
+  document.querySelectorAll(".addon-del").forEach(function(b){
+    b.addEventListener("click", function(){
+      var tr = this.closest("tr"); if(tr) tr.remove();
+    });
+  });
+  $("prodBody").innerHTML = AREA_TYPES.map(function(t){
+    return "<tr><td>"+esc(t.name)+'</td><td><input inputmode="decimal" class="prod-rate" data-id="'+t.id+'" type="number" min="1" step="50" value="'+s.prodRates[t.id]+'"></td></tr>';
+  }).join("");
+  $("periodBody").innerHTML = PERIODS.map(function(t){
+    return "<tr><td>"+esc(t.name)+'</td><td><input inputmode="decimal" class="period-factor" data-id="'+t.id+'" type="number" min="0" step="0.05" value="'+s.periodFactors[t.id]+'"></td></tr>';
+  }).join("");
+  $("freqBody").innerHTML = FREQUENCIES.map(function(t){
+    return "<tr><td>"+esc(t.name)+'</td><td><input inputmode="decimal" class="freq-disc" data-id="'+t.id+'" type="number" min="0" max="90" step="1" value="'+s.freqDiscounts[t.id]+'"></td><td class="num">'+t.visitsYear+"</td></tr>";
+  }).join("");
+  $("coHeader").textContent = s.company ? (s.company + (s.phone ? " · " + s.phone : "")) : "";
+}
+function saveSettings(){
+  var s = state.settings;
+  s.company = $("sCompany").value; s.phone = $("sPhone").value; s.email = $("sEmail").value; s.terms = $("sTerms").value;
+  s.hourlyRate = num($("sHourly").value, 55); s.crewPay = num($("sCrewPay").value, 22);
+  s.suppliesPct = num($("sSupplies").value, 6); if(s.suppliesPct > 500) s.suppliesPct = 500;
+  s.mileCost = num($("sMile").value, 0.70);
+  s.overheadPct = num($("sOverhead").value, 10); if(s.overheadPct > 500) s.overheadPct = 500;
+  s.floorMargin = pctC($("sFloor").value, 30); s.targetMargin = pctC($("sTarget").value, 45);
+  if(s.targetMargin < s.floorMargin) s.targetMargin = s.floorMargin;
+  s.minJob = num($("sMinJob").value, 99);
+  s.sqftPerHour = num($("sSqftHr").value, 450); if(s.sqftPerHour <= 0) s.sqftPerHour = 450;
+  s.minsBed = num($("sMinsBed").value, 10); s.minsBath = num($("sMinsBath").value, 20);
+  document.querySelectorAll(".svc-factor").forEach(function(el){ s.svcFactors[el.getAttribute("data-id")] = factor(el.value, 1); });
+  document.querySelectorAll(".cond-factor").forEach(function(el){ s.condFactors[el.getAttribute("data-id")] = factor(el.value, 1); });
+  var tiers = [];
+  var uptos = document.querySelectorAll(".tier-upto"), prices = document.querySelectorAll(".tier-price");
+  for(var i=0;i<uptos.length;i++){
+    var upTo = num(uptos[i].value, 0);
+    if(upTo > 0) tiers.push({upTo:upTo, price:num(prices[i].value, 0)});
+  }
+  tiers.sort(function(a,b){ return a.upTo - b.upTo; });
+  if(tiers.length) s.tiers = tiers;
+  s.overSqftRate = num($("sOverRate").value, 0.12);
+  var adds = [];
+  document.querySelectorAll(".addon-name").forEach(function(el){
+    var id = el.getAttribute("data-id");
+    var priceEl = document.querySelector('.addon-price[data-id="'+id+'"]');
+    var name = el.value.trim();
+    if(name) adds.push({id:id, name:name.slice(0,60), price:num(priceEl ? priceEl.value : 0, 0)});
+  });
+  if(adds.length) s.addons = adds;
+  document.querySelectorAll(".prod-rate").forEach(function(el){ var v = num(el.value, 0); if(v > 0) s.prodRates[el.getAttribute("data-id")] = v; });
+  document.querySelectorAll(".period-factor").forEach(function(el){ s.periodFactors[el.getAttribute("data-id")] = factor(el.value, 1); });
+  document.querySelectorAll(".freq-disc").forEach(function(el){ s.freqDiscounts[el.getAttribute("data-id")] = pctC(el.value, 0); });
+  state.settings = sanitizeSettings(s);
+  save(); renderSettings(); fillBuilderSelects(); renderAddonRows(currentAddonQtys()); recalc();
+  var savedHtml = '<span class="good">Settings saved \u2713</span> \u2014 new quotes use these rates.';
+  $("settingsMsg").innerHTML = savedHtml;
+  var topMsg = $("settingsMsgTop"); if(topMsg) topMsg.innerHTML = savedHtml;
+}
+function currentAddonQtys(){
+  var qtys = {};
+  document.querySelectorAll(".addon-qty").forEach(function(el){
+    var v = num(el.value, 0); if(v > 0) qtys[el.getAttribute("data-id")] = v;
+  });
+  return qtys;
+}
+
+/* ---------- backup ---------- */
+function exportBackup(){
+  var payload = { app:"cleanquote", version:1, exported:new Date().toISOString(),
+    data:{ settings:state.settings, quotes:state.quotes, demoSeeded:state.demoSeeded, legal: state.legal || null } };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "cleanquote-backup.json"; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
+  $("backupMsg").textContent = "Backup exported.";
+}
+function importFromText(text){
+  try{
+    var parsed = JSON.parse(text);
+    if(!parsed || parsed.app !== "cleanquote" || !parsed.data || !parsed.data.settings || !Array.isArray(parsed.data.quotes)) throw new Error("bad shape");
+    state.settings = sanitizeSettings(parsed.data.settings);
+    state.quotes = [];
+    parsed.data.quotes.forEach(function(rq){ var q = sanitizeQuote(rq); if(q) state.quotes.push(q); });
+    state.demoSeeded = !!parsed.data.demoSeeded;
+    state.legal = parsed.data.legal || null;
+    save(); renderSettings(); fillBuilderSelects(); resetQuote(); renderBook();
+    $("backupMsg").innerHTML = '<span class="good">Backup restored ✓</span> ('+state.quotes.length+' quotes).';
+    return true;
+  }catch(e){
+    $("backupMsg").innerHTML = '<span class="bad">That is not a valid CleanQuote backup — nothing was changed.</span>';
+    return false;
+  }
+}
+function importBackupFile(file){
+  var reader = new FileReader();
+  reader.onload = function(){ importFromText(String(reader.result||"")); };
+  reader.onerror = function(){ $("backupMsg").innerHTML = '<span class="bad">Could not read that file — nothing was changed.</span>'; };
+  reader.readAsText(file);
+}
+
+/* ---------- init ---------- */
+function init(){
+  load();
+  var tabs = document.querySelectorAll("#tabs button");
+  tabs.forEach(function(b){ b.addEventListener("click", function(){ switchView(this.getAttribute("data-view")); }); });
+  $("modeRes").addEventListener("click", function(){ setMode("res"); });
+  $("modeCom").addEventListener("click", function(){ setMode("com"); });
+  ["qClient","qAddress","qCrew","qMiles","qDate","rSqft","rBeds","rBaths","cSqft"].forEach(function(id){
+    $(id).addEventListener("input", recalc); $(id).addEventListener("change", recalc);
+  });
+  ["qFreq","rSvc","rCond","rModel","cArea","cPeriod"].forEach(function(id){ $(id).addEventListener("change", recalc); });
+  $("qFinal").addEventListener("input", function(){ finalTouched = true; recalc(); });
+  $("qFinal").addEventListener("change", function(){ finalTouched = true; recalc(); });
+  $("qTerms").addEventListener("input", function(){});
+  $("qNotes").addEventListener("input", function(){});
+  $("saveQuoteBtn").addEventListener("click", saveQuote);
+  var sqs = $("saveQuoteBtnSticky"); if(sqs) sqs.addEventListener("click", saveQuote);
+  var pbs = $("printBtnSticky"); if(pbs) pbs.addEventListener("click", function(){
+    var q = readForm(); q.finalPrice = num($("qFinal").value, 0);
+    buildPrint(q); window.print();
+  });
+  $("resetQuoteBtn").addEventListener("click", resetQuote);
+  $("printBtn").addEventListener("click", function(){
+    var q = readForm(); q.finalPrice = num($("qFinal").value, 0);
+    buildPrint(q); window.print();
+  });
+  $("saveSettingsBtn").addEventListener("click", saveSettings);
+  var sst = $("saveSettingsBtnTop"); if(sst) sst.addEventListener("click", saveSettings);
+  $("addTierBtn").addEventListener("click", function(){
+    var tr = document.createElement("tr");
+    tr.innerHTML = '<td><input inputmode="decimal" class="tier-upto" type="number" min="1" step="50" value="5000"></td>'
+      + '<td><input inputmode="decimal" class="tier-price" type="number" min="0" step="1" value="499"></td>'
+      + '<td><button class="btn danger small tier-del" type="button">Remove</button></td>';
+    tr.querySelector(".tier-del").addEventListener("click", function(){ tr.remove(); });
+    $("tierBody").appendChild(tr);
+  });
+  $("addAddonBtn").addEventListener("click", function(){
+    var name = $("newAddonName").value.trim();
+    if(!name){ $("settingsMsg").innerHTML = '<span class="bad">Give the new add-on a name first.</span>'; return; }
+    var id = "custom-" + name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,24) + "-" + Date.now().toString(36);
+    state.settings.addons.push({id:id, name:name.slice(0,60), price:num($("newAddonPrice").value, 0)});
+    save(); renderSettings(); renderAddonRows(currentAddonQtys());
+    $("newAddonName").value = ""; $("newAddonPrice").value = "";
+    $("settingsMsg").innerHTML = '<span class="good">Add-on added ✓</span> — it now appears in the Quote Builder.';
+  });
+  $("exportBtn").addEventListener("click", exportBackup);
+  $("importFile").addEventListener("change", function(){ if(this.files && this.files[0]) importBackupFile(this.files[0]); this.value = ""; });
+  $("importTextBtn").addEventListener("click", function(){
+    var t = $("importText").value.trim();
+    if(!t){ $("backupMsg").innerHTML = '<span class="bad">Paste a backup first.</span>'; return; }
+    importFromText(t);
+  });
+  $("clearDemoBtn").addEventListener("click", function(){
+    state.quotes = state.quotes.filter(function(q){ return !q.demo; });
+    save(); renderBook(); $("backupMsg").textContent = "Demo data cleared — your own quotes were kept.";
+  });
+  $("wipeBtn").addEventListener("click", function(){
+    if(window.confirm("Erase ALL CleanQuote data (settings + every quote) on this device?")){
+      state = { settings: defaultSettings(), quotes: [], demoSeeded: true };
+      save(); renderSettings(); fillBuilderSelects(); resetQuote(); renderBook();
+      $("backupMsg").textContent = "All data erased.";
+    }
+  });
+  renderSettings();
+  fillBuilderSelects();
+  resetQuote();
+  renderBook();
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+<!-- ===== White Wolf Digital legal pattern (Terms v1.0) ===== -->
+<style>
+#legalOverlay{position:fixed;inset:0;z-index:99999;background:rgba(10,12,16,.72);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:18px 12px}
+#legalOverlay .legal-box{background:#fff;color:#14181f;max-width:560px;width:100%;border-radius:14px;padding:22px 20px;margin:auto;box-shadow:0 12px 40px rgba(0,0,0,.4);position:relative}
+#legalOverlay h2{margin:0 0 2px;font-size:22px}
+#legalOverlay h3{margin:0 0 12px;font-size:17px}
+#legalOverlay .legal-sum{font-size:16px;line-height:1.55;margin:10px 0}
+#legalOverlay .legal-sum p{margin:4px 0;font-weight:600}
+#legalOverlay .legal-note{background:#fff4d6;border:1px solid #e5c96a;border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
+#legalAgreeBtn{min-height:52px;width:100%;font-size:17px;font-weight:700;margin-top:14px;cursor:pointer}
+#legalAgreeBtn:disabled{opacity:.45;cursor:not-allowed}
+#legalOverlay .legal-check{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:15px;line-height:1.45;cursor:pointer;text-align:left}
+#legalOverlay .legal-check input{width:22px;height:22px;min-width:22px;margin:2px 0 0;cursor:pointer}
+#legalOverlay .legal-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+#legalOverlay .legal-row button{min-height:48px;flex:1 1 200px;cursor:pointer;font-size:15px}
+#legalFullView{position:absolute;inset:0;background:#fff;border-radius:14px;display:none;flex-direction:column;overflow:hidden}
+#legalFullView .legal-full-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #ddd}
+#legalFullText{overflow:auto;padding:14px 18px;font-size:14.5px;line-height:1.55;text-align:left}
+#legalBackBtn{min-height:48px;min-width:88px;cursor:pointer;font-size:15px;font-weight:700}
+#legalCard{text-align:left;font-size:14.5px;line-height:1.55}
+#legalCard h3{margin:16px 0 6px}
+#legalCard ul{margin:6px 0 6px 18px;padding:0}
+#legalPageBtn{min-height:48px;cursor:pointer;font-size:15px;font-weight:700;width:100%}
+.legal-scrollbox{max-height:46vh;overflow:auto;border:1px solid #ddd;border-radius:8px;padding:10px 14px;margin-top:8px}
+</style>
+<script>
+"use strict";
+/* ===== Legal pattern: first-run Terms acceptance + Settings > Legal ===== */
+var TERMS_VERSION = "1.0";
+var LEGAL_APP_NAME = "CleanQuote";
+var LEGAL_KEY = "cleanquote_v1";
+var LEGAL_KEYS = ["cleanquote_v1"];
+var LEGAL_GLOBAL = "state";
+var LEGAL_HAS_DISCLAIMER = true;
+var LEGAL_SETTINGS_SEL = "#view-settings";
+var LEGAL_TERMS_HTML = "<h2>Terms of Use \u2014 White Wolf Digital Apps</h2>\n<p><strong>Version 1.0 (DRAFT \u2014 pending attorney review)</strong> <strong>Seller: White Wolf Tree Service LLC, selling digital products under the name &quot;White Wolf Digital&quot;</strong> <strong>Contact: whitewolfoklahoma@gmail.com</strong></p>\n<h3>1. What you&#x27;re buying</h3>\n<p>Our apps (including ForgeFit AI, ForgeKitchen, TreeBid Pro, SnowBid, WashPrice Pro, RoofSquares, JobProfit Tracker, PastureLedger, and the other titles sold under White Wolf Digital) are single-file software tools. When you buy one, you are buying a <strong>license to use the file</strong>, not ownership of the software itself.</p>\n<h3>2. Your license</h3>\n<ul>\n<li>You may use the app for your own personal or business work.</li>\n<li>You may open it on your own devices (phone, tablet, computer) and move your own data between them using the app&#x27;s built-in backup/export tools.</li>\n<li>You may <strong>not</strong> resell, redistribute, give away, upload, or share the app file (or a copy of it) with anyone else \u2014 including posting it online, bundling it with other products, or selling access to it.</li>\n<li>You may <strong>not</strong> claim the app as your own work, remove its branding or notices, or use it to build a competing product for resale.</li>\n<li>One purchase = one buyer. A business purchase covers the buyer and their own employees using it for that business&#x27;s work; it does not cover other businesses.</li>\n</ul>\n<h3>3. Your data stays yours \u2014 and stays on your device</h3>\n<ul>\n<li>The current versions of our apps run <strong>entirely on your device</strong>. They have no accounts, no sign-in, no analytics, and they collect, transmit, and store <strong>none</strong> of your information on any server. We never see your data.</li>\n<li>Your records are stored in your browser/app storage on your device. **You are responsible for backing them up** using the app&#x27;s export tools. If you clear your browser data, lose your device, or uninstall the app, your records may be permanently lost, and we cannot recover them \u2014 we never had a copy.</li>\n<li>Files you export (backups, quotes, PDFs) are under your control. Where you store or send them is up to you.</li>\n</ul>\n<h3>4. Estimates are tools, not guarantees</h3>\n<p>Every number our apps produce \u2014 bids, prices, costs, calorie targets, projections, schedules, totals \u2014 is an <strong>estimate generated from the information you enter and the settings you choose</strong>. Outputs are aids for your own judgment, not guarantees of price, profit, outcome, or result. You are responsible for checking any output before relying on it (see also the disclaimer that applies to your app: Health Disclaimer for fitness/nutrition apps, Estimator Disclaimer for contractor tools). If an input is wrong, the output will be wrong.</p>\n<h3>5. Acceptable use</h3>\n<p>Don&#x27;t use the apps to break the law, infringe anyone&#x27;s rights, or misrepresent quotes, invoices, or records to your own customers. For the fitness apps, the guardrails in the app (healthy-rate limits, calorie floor) are part of the product \u2014 don&#x27;t treat the app as a way around them.</p>\n<h3>6. Provided &quot;as is&quot;</h3>\n<p>The apps are provided <strong>&quot;as is&quot; and &quot;as available,&quot; without warranties of any kind</strong>, express or implied \u2014 including merchantability, fitness for a particular purpose, accuracy of calculations, and uninterrupted or error-free operation \u2014 to the maximum extent allowed by law. Software has bugs; browsers change; we work to fix problems but do not promise any app is error-free or will work on every device or browser forever.</p>\n<h3>7. Limitation of liability</h3>\n<p>To the maximum extent allowed by law:</p>\n<ul>\n<li>We are **not liable for indirect, incidental, special, or consequential damages** \u2014 including lost profits, lost or mispriced jobs, lost data, or business interruption \u2014 arising from use of the apps.</li>\n<li>Our total liability for any claim connected to an app is limited to the <strong>amount you paid for that app</strong>.</li>\n<li>Nothing in these terms limits liability that cannot legally be limited.</li>\n</ul>\n<h3>8. Refunds</h3>\n<p>Refunds are handled <strong>by the storefront you bought from, under that storefront&#x27;s policy</strong> \u2014 Gumroad&#x27;s refund policy for Gumroad purchases, and Google Play&#x27;s refund policy for Play purchases. These terms do not add to, replace, or override the storefront&#x27;s refund rules. If a file is defective and won&#x27;t open, contact us at whitewolfoklahoma@gmail.com and we&#x27;ll fix or replace the file.</p>\n<h3>9. Updates and changes to these terms</h3>\n<ul>\n<li>We may release updated versions of an app. Updates may add, change, or remove features.</li>\n<li>We may update these terms. The version you agreed to is recorded in the app (version number and date) at first-run acceptance. If terms change, the app may ask you to accept the new version once on next open. Updated terms apply going forward, not retroactively.</li>\n<li>If you don&#x27;t agree to an updated version of the terms, stop using the app.</li>\n</ul>\n<h3>10. Governing law</h3>\n<p>These terms are governed by the laws of the <strong>State of Oklahoma</strong>, USA. (Attorney to confirm governing law and venue before publication.)</p>\n<h3>11. Contact</h3>\n<p>White Wolf Tree Service LLC (White Wolf Digital) \u2014 whitewolfoklahoma@gmail.com.</p>\n<h3>CONNECTED FEATURES \u2014 takes effect only when these features ship</h3>\n<p><em>The sections below apply only to future connected features (device sync via Health Connect, AI voice logging, and the AI Goal Preview in ForgeFit). They do not apply to the current offline versions, which never transmit data.</em></p>\n<ul>\n<li><strong>Opt-in only.</strong> Connected features are off by default. Each one asks for your separate, explicit consent \u2014 on its own consent screen, in plain language \u2014 before anything leaves your device. Declining never disables the app&#x27;s offline features.</li>\n<li><strong>What gets sent.</strong> Only what the consent screen names, only when you use the feature: for example, a meal description (text, or audio only if cloud transcription is on) for AI voice logging, or the single photo you choose for an AI Goal Preview.</li>\n<li><strong>No retention by us.</strong> Our relay service passes your request to the named AI provider and keeps nothing \u2014 no copies of your photos, audio, transcripts, or entries are stored on our servers. Provider handling is described on the consent screen and in the Privacy Policy.</li>\n<li><strong>Health data stays on the device.</strong> Device sync (Health Connect) reads your health data on your phone and stores it in the app on your phone. It is not uploaded to us.</li>\n<li><strong>Allowances.</strong> Some connected features run on third-party AI services we pay for per use, so they may include a monthly allowance described in the app (for example, a set number of AI previews or voice entries per month), with optional additional credits. Allowances and pricing will be shown in the app before you use the feature; they are not a subscription unless the app says so in plain words.</li>\n<li><strong>Permissions.</strong> Connected features may request device permissions (such as Health Connect access or the microphone) at the moment you first use them. You can revoke permissions any time in your device settings; the related feature will simply stop working.</li>\n</ul>";
+var LEGAL_DISC_HTML = "<h2>Estimator Disclaimer \u2014 Contractor &amp; Trade Tools</h2>\n<p><strong>Applies to: TreeBid Pro, SnowBid, WashPrice Pro, RoofSquares, JobProfit Tracker, FieldForms Toolkit, PaintPro, FenceDeck, MarketMaker, and the other estimating/pricing tools sold under White Wolf Digital \u2014 including bundles that contain them.</strong></p>\n<h3>Estimating aids, not finished quotes</h3>\n<ul>\n<li>These apps are <strong>estimating and record-keeping aids</strong>. Every bid, price, cost, measurement, and total they produce is an **estimate based on the information and rates you enter**.</li>\n<li>**You \u2014 the business owner \u2014 are responsible for verifying everything before you quote a customer:** measurements and quantities, site conditions, your current material and labor costs, your rates and margins, taxes, permit and license requirements, disposal rules, and any contract terms.</li>\n<li>Default rates, presets, and sample data included in the apps are starting points only. They are not market prices, not industry standards, and not a recommendation of what you should charge.</li>\n<li>A saved quote keeps the prices in effect when you created it (price snapshot). Changing your presets later does not change saved quotes \u2014 and a saved quote is still your responsibility to review before sending.</li>\n</ul>\n<h3>Specific tools</h3>\n<ul>\n<li><strong>TreeBid Pro:</strong> tree work is dangerous and site-specific. Difficulty factors and presets cannot see the actual tree, lean, rot, targets, or access. Inspect every job in person before final pricing. The &quot;Invoice with Wave&quot; feature is an open-and-paste handoff \u2014 TreeBid does not connect to Wave, and the invoice you send from Wave is yours.</li>\n<li><strong>RoofSquares / measurement tools:</strong> confirm roof measurements and pitch in person or by your usual method before ordering materials.</li>\n<li><strong>SnowBid / seasonal tools:</strong> route times, snowfall amounts, and service pricing vary by storm and site; seasonal contracts are your agreement with your customer, on your terms.</li>\n<li><strong>JobProfit Tracker:</strong> profit figures depend on the costs you enter. The app is not accounting or tax software and does not replace your bookkeeper or accountant.</li>\n</ul>\n<h3>Bottom line</h3>\n<p>If an output and your judgment disagree, trust your judgment \u2014 then fix the input. We are not responsible for jobs won, lost, or mispriced based on app outputs, within the limits of the Terms of Use.</p>";
+var LEGAL_PRIVACY_HTML = "<h3>Privacy</h3><p>This app has no accounts and no sign-in. It collects no data, runs no analytics, and sends nothing anywhere &mdash; everything you enter is stored only on this device, in this browser/app storage. We never see your data. You are responsible for backing up your records with the app&rsquo;s export tools; files you export are under your control.</p>";
+var __legalRecord = null;
+var __legalOrigSet = localStorage.setItem.bind(localStorage);
+function __legalReadStored(){
+  try { var raw = localStorage.getItem(LEGAL_KEY); if(!raw) return null; var p = JSON.parse(raw); return (p && typeof p === "object") ? p : null; } catch(e){ return null; }
+}
+function __legalAdopt(rec){ if(rec && rec.termsVersion){ __legalRecord = { termsVersion: String(rec.termsVersion), acceptedDate: rec.acceptedDate || "", disclaimerShown: !!rec.disclaimerShown }; } }
+(function(){
+  var stored = __legalReadStored();
+  if (stored && stored.legal) __legalAdopt(stored.legal);
+})();
+/* Keep the acceptance inside the app's own saved state: adopt any legal record the app writes,
+   and re-attach the known record when an app save would otherwise drop it. */
+localStorage.setItem = function(k, v){
+  if (LEGAL_KEYS.indexOf(k) >= 0 && typeof v === "string"){
+    try {
+      var p = JSON.parse(v);
+      if (p && typeof p === "object" && !Array.isArray(p)){
+        if (p.legal) __legalAdopt(p.legal);
+        else if (__legalRecord && k === LEGAL_KEY){ p.legal = __legalRecord; v = JSON.stringify(p); }
+      }
+    } catch(e){}
+  }
+  return __legalOrigSet(k, v);
+};
+function __legalVersionOlder(a, b){
+  var pa = String(a||"0").split("."), pb = String(b||"0").split(".");
+  for (var i = 0; i < Math.max(pa.length, pb.length); i++){ var x = parseInt(pa[i]||"0",10)||0, y = parseInt(pb[i]||"0",10)||0; if (x < y) return true; if (x > y) return false; }
+  return false;
+}
+function __legalAcceptLine(){
+  if (__legalRecord && __legalRecord.acceptedDate) return "You agreed to Terms v" + __legalRecord.termsVersion + " on " + __legalRecord.acceptedDate + ".";
+  return "Terms acceptance not yet recorded.";
+}
+function __legalRenderAcceptLine(){
+  var el = document.getElementById("legalAcceptLine");
+  if (el) el.textContent = __legalAcceptLine();
+}
+function __legalBuildPage(){
+  var sec = document.querySelector(LEGAL_SETTINGS_SEL);
+  if (!sec || document.getElementById("legalCard")) return;
+  var wrap = document.createElement("div");
+  wrap.className = "card";
+  wrap.style.marginTop = "14px";
+  var discSection = LEGAL_HAS_DISCLAIMER ? '<h3>Estimator Disclaimer</h3><div class="legal-scrollbox">' + LEGAL_DISC_HTML + "</div>" : "";
+  wrap.innerHTML = '<h2>Legal</h2>'
+    + '<p><button type="button" id="legalPageBtn">Legal &mdash; Terms, ' + (LEGAL_HAS_DISCLAIMER ? "Disclaimer" : "") + ' &amp; Privacy</button></p>'
+    + '<div id="legalCard" style="display:none">'
+    + '<p id="legalAcceptLine"></p>'
+    + "<h3>Terms of Use</h3>" + '<div class="legal-scrollbox">' + LEGAL_TERMS_HTML + "</div>"
+    + discSection
+    + LEGAL_PRIVACY_HTML
+    + '<p><strong>Sold by:</strong> White Wolf Tree Service LLC (White Wolf Digital) &mdash; whitewolfoklahoma@gmail.com</p>'
+    + "</div>";
+  sec.appendChild(wrap);
+  document.getElementById("legalPageBtn").addEventListener("click", function(){
+    var card = document.getElementById("legalCard");
+    card.style.display = (card.style.display === "none") ? "block" : "none";
+    __legalRenderAcceptLine();
+    if (card.style.display === "block"){ try { card.scrollIntoView({block:"start"}); } catch(e){} }
+  });
+  __legalRenderAcceptLine();
+}
+function __legalShowFull(kind){
+  var fv = document.getElementById("legalFullView");
+  var ft = document.getElementById("legalFullText");
+  var fh = document.getElementById("legalFullTitle");
+  if (!fv || !ft) return;
+  if (kind === "disclaimer"){ ft.innerHTML = LEGAL_DISC_HTML; if (fh) fh.textContent = "Estimator Disclaimer"; }
+  else { ft.innerHTML = LEGAL_TERMS_HTML; if (fh) fh.textContent = "Terms of Use"; }
+  fv.style.display = "flex";
+  ft.scrollTop = 0;
+}
+function __legalMaybePrompt(){
+  var stored = __legalReadStored();
+  var rec = stored && stored.legal ? stored.legal : null;
+  if (rec) __legalAdopt(rec);
+  var need = false, updated = false;
+  if (!rec) need = true;
+  else if (__legalVersionOlder(rec.termsVersion, TERMS_VERSION)){ need = true; updated = true; }
+  var ov = document.getElementById("legalOverlay");
+  if (!ov) return;
+  if (need){
+    var note = document.getElementById("legalUpdatedNote");
+    if (note) note.style.display = updated ? "block" : "none";
+    var chk0 = document.getElementById("legalAgreeCheck");
+    var ab0 = document.getElementById("legalAgreeBtn");
+    if (chk0) chk0.checked = false;
+    if (ab0) ab0.disabled = true;
+    ov.style.display = "flex";
+  } else {
+    ov.style.display = "none";
+  }
+  __legalRenderAcceptLine();
+}
+function __legalAgree(){
+  var chkA = document.getElementById("legalAgreeCheck");
+  if (chkA && !chkA.checked) return;
+  var d = new Date();
+  var iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  __legalRecord = { termsVersion: TERMS_VERSION, acceptedDate: iso, disclaimerShown: LEGAL_HAS_DISCLAIMER };
+  try { var g = window[LEGAL_GLOBAL]; if (g && typeof g === "object") g.legal = __legalRecord; } catch(e){}
+  try {
+    var stored = __legalReadStored();
+    if (stored){ stored.legal = __legalRecord; __legalOrigSet(LEGAL_KEY, JSON.stringify(stored)); }
+    else { var g2 = window[LEGAL_GLOBAL]; if (g2 && typeof g2 === "object") __legalOrigSet(LEGAL_KEY, JSON.stringify(g2)); }
+  } catch(e){}
+  var ov = document.getElementById("legalOverlay");
+  if (ov) ov.style.display = "none";
+  __legalRenderAcceptLine();
+}
+function __legalBuildOverlay(){
+  if (document.getElementById("legalOverlay")) return;
+  var ov = document.createElement("div");
+  ov.id = "legalOverlay";
+  ov.style.display = "none";
+  var discBtn = LEGAL_HAS_DISCLAIMER ? '<button type="button" id="legalDisclaimerBtn">Read the Estimator Disclaimer</button>' : "";
+  var followLine = LEGAL_HAS_DISCLAIMER
+    ? "The full Terms and Disclaimer are one tap away, now and any time in Settings &rarr; Legal."
+    : "The full Terms are one tap away, now and any time in Settings &rarr; Legal.";
+  var checkLabel = LEGAL_HAS_DISCLAIMER
+    ? "I have read the disclaimer and I agree to the Terms of Use"
+    : "I have read and I agree to the Terms of Use";
+  ov.innerHTML = '<div class="legal-box" role="dialog" aria-modal="true" aria-label="Terms of Use">'
+    + "<h2>" + LEGAL_APP_NAME + "</h2><h3>Terms of Use</h3>"
+    + '<div class="legal-note" id="legalUpdatedNote" style="display:none">Our terms were updated (v' + TERMS_VERSION + ").</div>"
+    + '<div class="legal-sum"><p>Your data stays on your device.</p>'
+    + "<p>Estimates are aids, not guarantees.</p>"
+    + "<p>You're responsible for checking outputs before you rely on them.</p></div>"
+    + "<p>" + followLine + "</p>"
+    + '<div class="legal-row"><button type="button" id="legalTermsBtn">Read the full Terms</button>' + discBtn + "</div>"
+    + '<label class="legal-check"><input type="checkbox" id="legalAgreeCheck"> <span>' + checkLabel + '</span></label>'
+    + '<button type="button" id="legalAgreeBtn" disabled>I Agree</button>'
+    + '<div id="legalFullView"><div class="legal-full-head"><button type="button" id="legalBackBtn">&larr; Back</button><strong id="legalFullTitle">Terms of Use</strong></div><div id="legalFullText"></div></div>'
+    + "</div>";
+  document.body.appendChild(ov);
+  document.getElementById("legalAgreeBtn").addEventListener("click", __legalAgree);
+  var agreeChk = document.getElementById("legalAgreeCheck");
+  var agreeBtn = document.getElementById("legalAgreeBtn");
+  if (agreeChk && agreeBtn) agreeChk.addEventListener("change", function(){ agreeBtn.disabled = !agreeChk.checked; });
+  document.getElementById("legalTermsBtn").addEventListener("click", function(){ __legalShowFull("terms"); });
+  var db = document.getElementById("legalDisclaimerBtn");
+  if (db) db.addEventListener("click", function(){ __legalShowFull("disclaimer"); });
+  document.getElementById("legalBackBtn").addEventListener("click", function(){ document.getElementById("legalFullView").style.display = "none"; });
+}
+__legalBuildOverlay();
+__legalBuildPage();
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ __legalBuildOverlay(); __legalBuildPage(); __legalMaybePrompt(); });
+else __legalMaybePrompt();
+</script>
+
+</body>
+</html>
