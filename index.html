@@ -91,6 +91,8 @@ summary{cursor:pointer;font-weight:700;font-size:15px}
   <div class="sub">Cleaning-service quote calculator &amp; quote book — residential and commercial, priced from your real costs with a profit floor.</div>
   <div class="co" id="coHeader"></div>
 </header>
+<div style="text-align:center;padding:12px 16px;background:#fff8e6;border-bottom:2px solid #e8a13a;"><a href="https://travisbriggs.gumroad.com/l/mkujb" target="_blank" rel="noopener" style="display:inline-block;background:#e8a13a;color:#1d2b2e;font-weight:800;font-size:17px;padding:10px 22px;border-radius:8px;text-decoration:none;">Get the full version — $49</a></div>
+
 <nav id="tabs">
   <button data-view="quote" class="active">Quote Builder</button>
   <button data-view="book">Quote Book</button>
@@ -922,6 +924,18 @@ function buildPrint(q){
 }
 
 /* ---------- quote book ---------- */
+function duplicateQuote(q){
+  var copy = JSON.parse(JSON.stringify(q));
+  copy.id = "q" + Date.now() + "-" + Math.floor(Math.random()*100000);
+  copy.date = todayStr();
+  copy.status = "draft";
+  copy.created = Date.now();
+  delete copy.demo;
+  if(copy.snapshot && typeof copy.snapshot === "object") copy.snapshot.savedAt = Date.now();
+  state.quotes.unshift(copy);
+  save();
+  loadEdit(copy);
+}
 function statusPill(st){ return '<span class="pill '+st+'">'+st.toUpperCase()+"</span>"; }
 function ageDays(q){ var ts = +q.created; if(!isFinite(ts) || ts <= 0) ts = Date.now(); return Math.max(0, Math.floor((Date.now() - ts) / 86400000)); }
 function renderBook(){
@@ -962,6 +976,7 @@ function renderBook(){
       + "<td class='num' data-label='Margin'>"+marginAt(num(q.finalPrice,0), c).toFixed(1)+"%</td>"
       + "<td data-label='Status'>"+'<select class="row-status" data-id="'+esc(q.id)+'" style="width:auto;min-height:34px;padding:4px">'+stOpts+"</select></td>"
       + '<td data-label="Actions"><button class="btn secondary small" data-act="edit" data-id="'+esc(q.id)+'">Edit</button> '
+      + '<button class="btn secondary small" data-act="dup" data-id="'+esc(q.id)+'">Duplicate</button> '
       + '<button class="btn secondary small" data-act="print" data-id="'+esc(q.id)+'">Print</button> '
       + '<button class="btn danger small" data-act="del" data-id="'+esc(q.id)+'">Delete</button></td></tr>';
   }).join("");
@@ -979,6 +994,7 @@ function renderBook(){
       }
       if(act === "print"){ buildPrint(q); window.print(); return; }
       if(act === "edit"){ loadEdit(q); return; }
+      if(act === "dup"){ duplicateQuote(q); return; }
     });
   });
   $("bookBody").querySelectorAll("select.row-status").forEach(function(sel){
